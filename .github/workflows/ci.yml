@@ -2,46 +2,31 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 permissions:
   contents: read
 
 jobs:
-  verify:
+  client-and-docs:
+    name: Client and docs
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
+      - name: Check out repository
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 24.x
+          node-version: 24
 
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Install client and docs dependencies
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Restore .NET projects
-        run: dotnet restore TheBuilder.BlurPlaceholder.slnx
-
-      - name: Build .NET projects
-        run: |
-          dotnet build src/TheBuilder.BlurPlaceholder/TheBuilder.BlurPlaceholder.csproj --no-restore --configuration Release -p:UseSharedCompilation=false
-          dotnet build samples/TheBuilder.BlurPlaceholder.Example/TheBuilder.BlurPlaceholder.Example.csproj --no-restore --configuration Release -p:UseSharedCompilation=false
-          dotnet build tests/TheBuilder.BlurPlaceholder.Tests/TheBuilder.BlurPlaceholder.Tests.csproj --no-restore --configuration Release -p:UseSharedCompilation=false
-
-      - name: Test .NET projects
-        run: dotnet test tests/TheBuilder.BlurPlaceholder.Tests/TheBuilder.BlurPlaceholder.Tests.csproj --no-build --configuration Release
 
       - name: Build client and docs
         run: pnpm build
@@ -49,5 +34,83 @@ jobs:
       - name: Verify JavaScript decoder fixtures
         run: pnpm --filter @thebuilder/blur-placeholder-client test:decoders
 
+  dotnet:
+    name: .NET (Umbraco ${{ matrix.umbraco-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        umbraco-version:
+          - 17.1.0
+          - 17.*
+          - 18.*
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Test package
+        run: >-
+          dotnet test tests/TheBuilder.BlurPlaceholder.Tests/TheBuilder.BlurPlaceholder.Tests.csproj
+          --configuration Release
+          '-p:UmbracoVersion=${{ matrix.umbraco-version }}'
+
+  sample:
+    name: Sample host
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build sample host
+        run: dotnet build samples/TheBuilder.BlurPlaceholder.Example/TheBuilder.BlurPlaceholder.Example.csproj --configuration Release
+
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install backoffice dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Pack NuGet package
-        run: dotnet pack src/TheBuilder.BlurPlaceholder/TheBuilder.BlurPlaceholder.csproj --no-build --configuration Release --output artifacts
+        run: >-
+          dotnet pack src/TheBuilder.BlurPlaceholder/TheBuilder.BlurPlaceholder.csproj
+          --configuration Release
+          --output artifacts
+          -p:ContinuousIntegrationBuild=true
+
+      - name: Validate NuGet archive
+        shell: bash
+        run: |
+          package="$(find artifacts -name '*.nupkg' -print -quit)"
+          unzip -t "$package"
+          unzip -Z1 "$package" | grep -q '^README.md$'
+          unzip -Z1 "$package" | grep -q '^LICENSE$'
+          unzip -Z1 "$package" | grep -q '^THIRD-PARTY-NOTICES.md$'
+          unzip -Z1 "$package" | grep -q '^staticwebassets/App_Plugins/TheBuilderBlurPlaceholder/umbraco-package.json$'
+          unzip -Z1 "$package" | grep -q '^staticwebassets/App_Plugins/TheBuilderBlurPlaceholder/the-builder-blur-placeholder.js$'
