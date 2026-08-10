@@ -139,7 +139,7 @@ let h = class extends ie {
     e.has("value") && this._decodeValue();
   }
   async _decodeValue() {
-    const e = this.value.trim(), t = ++this._decodeRequest;
+    const e = (this.value ?? "").trim(), t = ++this._decodeRequest;
     if (this._copied = !1, this._blurred = !0, this._copyError = void 0, !e) {
       this._decodeState = { status: "empty" };
       return;
@@ -165,9 +165,10 @@ let h = class extends ie {
     }
   }
   async _copyValue() {
-    if (this.value)
+    const e = this.value ?? "";
+    if (e)
       try {
-        await navigator.clipboard.writeText(this.value), this._copied = !0;
+        await navigator.clipboard.writeText(e), this._copied = !0;
       } catch {
         this._copyError = "Clipboard access was not granted.";
       }
@@ -176,37 +177,37 @@ let h = class extends ie {
     this._blurred = e.currentTarget.checked;
   }
   render() {
-    const e = this._decodeState, t = e.status === "ready" ? e : void 0, r = t ? `${t.width} / ${t.height}` : "4 / 3";
+    const e = this.value ?? "", t = this._decodeState, r = t.status === "ready" ? t : void 0, a = r ? `${r.width} / ${r.height}` : "4 / 3";
     return _`
       <div class="editor">
-        <div class="preview" style="aspect-ratio: ${r}">
-          ${t ? _`<img
+        <div class="preview" style="aspect-ratio: ${a}">
+          ${r ? _`<img
                 class=${this._blurred ? "blurred" : W}
-                src="${t.preview}"
+                src="${r.preview}"
                 alt="Generated image placeholder"
               />` : _`<div class="empty">
-                ${e.status === "empty" ? _`<em>Blur placeholder will be generated when the image is saved.</em>` : e.status === "pending" ? "Decoding preview…" : "No preview"}
+                ${t.status === "empty" ? _`<em>Blur placeholder will be generated when the image is saved.</em>` : t.status === "pending" ? "Decoding preview…" : "No preview"}
               </div>`}
         </div>
         <div class="details">
           <div class="metadata">
-            <span>${t?.label ?? (e.status === "invalid" ? "Malformed value" : e.status === "pending" ? "Loading" : "Empty")}</span>
-            ${t ? _`<span>${t.width} × ${t.height}</span>` : W}
-            <span>${this.value.length} characters</span>
+            <span>${r?.label ?? (t.status === "invalid" ? "Malformed value" : t.status === "pending" ? "Loading" : "Empty")}</span>
+            ${r ? _`<span>${r.width} × ${r.height}</span>` : W}
+            <span>${e.length} characters</span>
           </div>
-          <code title="${this.value}">${$e(this.value)}</code>
+          <code title="${e}">${$e(e)}</code>
           <div class="actions">
-            <uui-button look="secondary" label="Copy placeholder" @click=${this._copyValue} ?disabled=${!this.value}>
+            <uui-button look="secondary" label="Copy placeholder" @click=${this._copyValue} ?disabled=${!e}>
               ${this._copied ? "Copied" : "Copy"}
             </uui-button>
             <uui-toggle
               label="Blur preview"
               .checked=${this._blurred}
-              ?disabled=${!t}
+              ?disabled=${!r}
               @change=${this._toggleBlur}
             ></uui-toggle>
           </div>
-          ${e.status === "invalid" ? _`<p class="error" role="alert">${e.error}</p>` : W}
+          ${t.status === "invalid" ? _`<p class="error" role="alert">${t.error}</p>` : W}
           ${this._copyError ? _`<p class="error" role="alert">${this._copyError}</p>` : W}
         </div>
       </div>
@@ -270,4 +271,4 @@ export {
   h as TheBuilderBlurPlaceholderPropertyEditorElement,
   Be as default
 };
-//# sourceMappingURL=blur-placeholder.element-CZXVSTh6.js.map
+//# sourceMappingURL=blur-placeholder.element-m4N187X8.js.map

@@ -31,7 +31,7 @@ export class TheBuilderBlurPlaceholderPropertyEditorElement extends UmbLitElemen
   }
 
   private async _decodeValue() {
-    const raw = this.value.trim();
+    const raw = (this.value ?? "").trim();
     const request = ++this._decodeRequest;
     this._copied = false;
     this._blurred = true;
@@ -70,10 +70,11 @@ export class TheBuilderBlurPlaceholderPropertyEditorElement extends UmbLitElemen
   }
 
   private async _copyValue() {
-    if (!this.value) return;
+    const value = this.value ?? "";
+    if (!value) return;
 
     try {
-      await navigator.clipboard.writeText(this.value);
+      await navigator.clipboard.writeText(value);
       this._copied = true;
     } catch {
       this._copyError = "Clipboard access was not granted.";
@@ -85,6 +86,7 @@ export class TheBuilderBlurPlaceholderPropertyEditorElement extends UmbLitElemen
   }
 
   override render() {
+    const value = this.value ?? "";
     const state = this._decodeState;
     const ready = state.status === "ready" ? state : undefined;
     const aspectRatio = ready ? `${ready.width} / ${ready.height}` : "4 / 3";
@@ -107,11 +109,11 @@ export class TheBuilderBlurPlaceholderPropertyEditorElement extends UmbLitElemen
           <div class="metadata">
             <span>${ready?.label ?? (state.status === "invalid" ? "Malformed value" : state.status === "pending" ? "Loading" : "Empty")}</span>
             ${ready ? html`<span>${ready.width} × ${ready.height}</span>` : nothing}
-            <span>${this.value.length} characters</span>
+            <span>${value.length} characters</span>
           </div>
-          <code title="${this.value}">${truncate(this.value)}</code>
+          <code title="${value}">${truncate(value)}</code>
           <div class="actions">
-            <uui-button look="secondary" label="Copy placeholder" @click=${this._copyValue} ?disabled=${!this.value}>
+            <uui-button look="secondary" label="Copy placeholder" @click=${this._copyValue} ?disabled=${!value}>
               ${this._copied ? "Copied" : "Copy"}
             </uui-button>
             <uui-toggle
