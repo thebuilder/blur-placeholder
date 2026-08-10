@@ -1,6 +1,8 @@
 ---
 title: License
 description: License and third-party attribution.
+seo:
+  image: /og/license.png
 ---
 
 The package is released under the MIT license. The vendored ThumbHash C# port is credited to Glitched Polygons GmbH, while Evan Wallace is credited separately for the original algorithm and project. The complete upstream MIT notice, reviewed pull request, and pinned source commit are retained in `THIRD-PARTY-NOTICES.md`.

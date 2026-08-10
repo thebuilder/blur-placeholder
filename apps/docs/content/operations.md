@@ -1,6 +1,8 @@
 ---
 title: Operations
 description: Backfill and retry behavior.
+seo:
+  image: /og/operations.png
 ---
 
 The save handler only reacts to the default Image media type when `umbracoFile` is dirty. It clears the placeholder when the source is cleared, invalid, or temporarily unavailable. The media save remains atomic: no separate retry state is changed before the media itself is persisted.

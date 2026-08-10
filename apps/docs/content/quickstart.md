@@ -1,6 +1,8 @@
 ---
 title: Quickstart
 description: Install and verify the extension in an Umbraco CMS 17 project.
+seo:
+  image: /og/quickstart.png
 ---
 
 ## Install

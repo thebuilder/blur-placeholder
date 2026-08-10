@@ -1,19 +1,11 @@
 ---
 title: Overview
-description: Generate compact image placeholders once in Umbraco and deliver one simple string to your frontend.
+description: Compare WebP, BlurHash, and ThumbHash output using measured examples, then choose the representation that fits your frontend.
+seo:
+  image: /og/overview.png
 ---
 
-Blur Placeholder adds one generated, read-only `blurPlaceholder` string to Umbraco's default Image media type. Generate it when the media file changes, store it with the image, and opt into it through the Delivery API when a frontend needs a loading placeholder.
-
-## See it in Umbraco
-
-The read-only media property previews the generated value, reports its representation and size, and lets you copy it directly from the backoffice.
-
-<Frame caption="Preview and copy the generated placeholder from an Image media item.">
-
-![A generated blur placeholder on an Image media item in the Umbraco backoffice](./screenshots/blur-placeholder-media.png)
-
-</Frame>
+Use this page to compare the package's actual output formats and payloads. The [landing page](/) owns the product overview and backoffice preview; this page focuses on the technical choice your frontend needs to make.
 
 :::tip[Start with WebP]
 The default tiny WebP is the simplest choice: it is ready to use as an image source and requires no client decoder. Choose a native hash when every byte matters or when its visual and metadata advantages justify decoder code in the client.

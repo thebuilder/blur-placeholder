@@ -1,14 +1,30 @@
-# Blur Placeholder for Umbraco
+<p align="center">
+  <img src="https://raw.githubusercontent.com/thebuilder/blur-placeholder/refs/heads/main/apps/docs/public/logo-mark.svg" width="112" height="112" alt="Blur Placeholder logo" />
+</p>
+
+<h1 align="center">Blur Placeholder for Umbraco</h1>
+
+<p align="center">
+  Generate compact WebP, BlurHash, or ThumbHash placeholders once in Umbraco<br />
+  and deliver one simple string to your frontend.
+</p>
 
 [![NuGet version](https://img.shields.io/nuget/v/TheBuilder.BlurPlaceholder)](https://www.nuget.org/packages/TheBuilder.BlurPlaceholder)
 [![NuGet downloads](https://img.shields.io/nuget/dt/TheBuilder.BlurPlaceholder)](https://www.nuget.org/packages/TheBuilder.BlurPlaceholder)
+[![Umbraco Marketplace](https://img.shields.io/badge/Umbraco-Marketplace-3544b1)](https://marketplace.umbraco.com/package/thebuilder.blurplaceholder)
 [![License](https://img.shields.io/github/license/thebuilder/blur-placeholder)](https://github.com/thebuilder/blur-placeholder/blob/main/LICENSE)
-
-Generate compact WebP, BlurHash, or ThumbHash image placeholders once in Umbraco and deliver one simple string to your frontend.
 
 Blur Placeholder is an Umbraco CMS 17 package that adds a generated, read-only `blurPlaceholder` property to the default Image media type. The value is generated when the image is saved and stored with the media item, so frontend requests do no image processing.
 
 ![Preview and copy a generated placeholder from an Image media item](https://raw.githubusercontent.com/thebuilder/blur-placeholder/refs/heads/main/apps/docs/content/screenshots/blur-placeholder-media.png)
+
+## Why Blur Placeholder?
+
+- **Generate once:** placeholder work happens when media changes, not during public requests.
+- **Choose the right representation:** use browser-ready tiny WebP by default, or opt into native BlurHash or ThumbHash.
+- **Keep the frontend contract small:** request one self-describing string through the Delivery API.
+- **Handle existing libraries:** fingerprinted background processing backfills images and resumes interrupted work.
+- **See what was generated:** the read-only backoffice property previews the result and reports its representation and size.
 
 ## Output formats
 
@@ -143,9 +159,10 @@ With the default configuration, `blurPlaceholder` is ready to pass to an image c
 
 ## Documentation
 
-- [Quickstart](https://github.com/thebuilder/blur-placeholder/blob/main/apps/docs/content/quickstart.md): install, configure, and verify the package.
-- [Delivery API](https://github.com/thebuilder/blur-placeholder/blob/main/apps/docs/content/delivery-api.mdx): request and consume the property, including native-hash decoding.
-- [Operations](https://github.com/thebuilder/blur-placeholder/blob/main/apps/docs/content/operations.md): backfills, retries, logging, and health checks.
-- [License and attribution](https://github.com/thebuilder/blur-placeholder/blob/main/apps/docs/content/license.md): package licensing and bundled third-party implementation notices.
+- [Overview](https://blur-placeholder.vercel.app/overview): compare the output formats and their payloads.
+- [Quickstart](https://blur-placeholder.vercel.app/quickstart): install, configure, and verify the package.
+- [Delivery API](https://blur-placeholder.vercel.app/delivery-api): request and consume the property, including native-hash decoding.
+- [Operations](https://blur-placeholder.vercel.app/operations): backfills, retries, logging, and health checks.
+- [License and attribution](https://blur-placeholder.vercel.app/license): package licensing and bundled third-party implementation notices.
 
 The runnable sample host is available in [`samples/TheBuilder.BlurPlaceholder.Example`](https://github.com/thebuilder/blur-placeholder/tree/main/samples/TheBuilder.BlurPlaceholder.Example).
