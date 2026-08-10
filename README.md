@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/thebuilder/blur-placeholder/refs/heads/main/icon.png?v=2" width="128" height="128" alt="Blur Placeholder logo">
+  <img src="./icon.png" width="128" height="128" alt="Blur Placeholder">
 </p>
 
 <h1 align="center">Blur Placeholder for Umbraco</h1>
