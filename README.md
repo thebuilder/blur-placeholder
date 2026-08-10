@@ -1,16 +1,10 @@
-<p align="center">
-  <img src="./icon.png" width="128" height="128" alt="Blur Placeholder">
-</p>
+# Blur Placeholder for Umbraco
 
-<h1 align="center">Blur Placeholder for Umbraco</h1>
+[![NuGet version](https://img.shields.io/nuget/v/TheBuilder.BlurPlaceholder)](https://www.nuget.org/packages/TheBuilder.BlurPlaceholder)
+[![NuGet downloads](https://img.shields.io/nuget/dt/TheBuilder.BlurPlaceholder)](https://www.nuget.org/packages/TheBuilder.BlurPlaceholder)
+[![License](https://img.shields.io/github/license/thebuilder/blur-placeholder)](https://github.com/thebuilder/blur-placeholder/blob/main/LICENSE)
 
-<p align="center">Generate compact WebP, BlurHash, or ThumbHash image placeholders once in Umbraco and deliver one simple string to your frontend.</p>
-
-<p align="center">
-  <a href="https://www.nuget.org/packages/TheBuilder.BlurPlaceholder"><img src="https://img.shields.io/nuget/v/TheBuilder.BlurPlaceholder" alt="NuGet version"></a>
-  <a href="https://www.nuget.org/packages/TheBuilder.BlurPlaceholder"><img src="https://img.shields.io/nuget/dt/TheBuilder.BlurPlaceholder" alt="NuGet downloads"></a>
-  <a href="https://github.com/thebuilder/blur-placeholder/blob/main/LICENSE"><img src="https://img.shields.io/github/license/thebuilder/blur-placeholder" alt="License"></a>
-</p>
+Generate compact WebP, BlurHash, or ThumbHash image placeholders once in Umbraco and deliver one simple string to your frontend.
 
 Blur Placeholder is an Umbraco CMS 17 package that adds a generated, read-only `blurPlaceholder` property to the default Image media type. The value is generated when the image is saved and stored with the media item, so frontend requests do no image processing.
 

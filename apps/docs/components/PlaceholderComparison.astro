@@ -46,17 +46,20 @@ function formatBytes(bytes: number) {
 <style>
   .comparison-list { display: grid; gap: 2.5rem; margin-block: 1.5rem 2.5rem; }
   .comparison { display: grid; gap: 1rem; }
-  .comparison header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+  .comparison header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; }
   .comparison h3 { margin: 0; }
-  .comparison header span { color: var(--sl-color-gray-3, currentColor); font-size: .875rem; white-space: nowrap; }
+  .comparison header span { min-width: 0; color: var(--sl-color-gray-3, currentColor); font-size: .875rem; overflow-wrap: anywhere; }
   .comparison-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
   .demo-figure { min-width: 0; margin: 0; border: 1px solid color-mix(in srgb, currentColor 16%, transparent); border-radius: .75rem; overflow: hidden; }
-  .demo-frame { display: grid; place-items: center; height: 13rem; overflow: hidden; background-color: #e8edf3; background-image: linear-gradient(45deg, #d7dde5 25%, transparent 25%), linear-gradient(-45deg, #d7dde5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #d7dde5 75%), linear-gradient(-45deg, transparent 75%, #d7dde5 75%); background-position: 0 0, 0 8px, 8px -8px, -8px 0; background-size: 16px 16px; }
-  .demo-frame img { width: 100%; height: 100%; object-fit: contain; }
+  .demo-frame { --frame-height: 13rem; display: grid; place-items: center; height: var(--frame-height); overflow: hidden; background-color: #e8edf3; background-image: linear-gradient(45deg, #d7dde5 25%, transparent 25%), linear-gradient(-45deg, #d7dde5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #d7dde5 75%), linear-gradient(-45deg, transparent 75%, #d7dde5 75%); background-position: 0 0, 0 8px, 8px -8px, -8px 0; background-size: 16px 16px; }
+  .demo-frame img { display: block; width: 100%; max-width: none; height: var(--frame-height) !important; object-fit: contain; }
   .demo-figure.placeholder .demo-frame img { filter: blur(12px); transform: scale(1.08); }
   .demo-figure figcaption { display: grid; gap: .25rem; padding: .75rem; }
   .demo-figure figcaption span { color: var(--sl-color-gray-3, currentColor); font-size: .8rem; line-height: 1.35; }
   .demo-figure code { display: block; overflow: hidden; font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
   @media (max-width: 64rem) { .comparison-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-width: 34rem) { .comparison-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 34rem) {
+    .comparison header span { flex-basis: 100%; }
+    .comparison-grid { grid-template-columns: 1fr; }
+  }
 </style>
