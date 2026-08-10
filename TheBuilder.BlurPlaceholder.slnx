@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/TheBuilder.BlurPlaceholder.Example/TheBuilder.BlurPlaceholder.Example.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/TheBuilder.BlurPlaceholder/TheBuilder.BlurPlaceholder.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TheBuilder.BlurPlaceholder.Tests/TheBuilder.BlurPlaceholder.Tests.csproj" />
+  </Folder>
+</Solution>

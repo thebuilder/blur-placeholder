@@ -1,0 +1,3 @@
+packages:
+  - apps/docs
+  - src/TheBuilder.BlurPlaceholder/Client

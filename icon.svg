@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Blur Placeholder</title>
+  <desc id="desc">Three overlapping blue, violet, and pink image tiles surrounding a soft placeholder glow on a dark rounded backdrop.</desc>
+  <defs>
+    <linearGradient id="backdrop" x1="128" y1="0" x2="128" y2="256" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#202a60"/>
+      <stop offset=".52" stop-color="#121833"/>
+      <stop offset="1" stop-color="#080914"/>
+    </linearGradient>
+    <radialGradient id="backdrop-glow" cx="0" cy="0" r="1" gradientTransform="translate(128 18) rotate(90) scale(150)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7c6ee7" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#7c6ee7" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="tile-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+    <filter id="placeholder-glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+  </defs>
+  <rect width="256" height="256" rx="52" fill="url(#backdrop)"/>
+  <rect width="256" height="256" rx="52" fill="url(#backdrop-glow)"/>
+  <g opacity=".42" filter="url(#tile-glow)">
+    <rect x="20" y="84" width="92" height="116" rx="28" fill="#60a5fa"/>
+    <rect x="82" y="48" width="92" height="152" rx="28" fill="#9b83ec"/>
+    <rect x="144" y="84" width="92" height="116" rx="28" fill="#ed63ad"/>
+  </g>
+  <rect x="20" y="84" width="92" height="116" rx="28" fill="#60a5fa" opacity=".92"/>
+  <rect x="82" y="48" width="92" height="152" rx="28" fill="#9b83ec" opacity=".92"/>
+  <rect x="144" y="84" width="92" height="116" rx="28" fill="#ed63ad" opacity=".92"/>
+  <circle cx="128" cy="128" r="38" fill="#fff" opacity=".58" filter="url(#placeholder-glow)"/>
+  <circle cx="128" cy="128" r="20" fill="#fff" opacity=".72"/>
+</svg>

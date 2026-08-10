@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install client and docs dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Restore .NET projects
+        run: dotnet restore TheBuilder.BlurPlaceholder.slnx
+
+      - name: Build .NET projects
+        run: |
+          dotnet build src/TheBuilder.BlurPlaceholder/TheBuilder.BlurPlaceholder.csproj --no-restore --configuration Release -p:UseSharedCompilation=false
+          dotnet build samples/TheBuilder.BlurPlaceholder.Example/TheBuilder.BlurPlaceholder.Example.csproj --no-restore --configuration Release -p:UseSharedCompilation=false
+          dotnet build tests/TheBuilder.BlurPlaceholder.Tests/TheBuilder.BlurPlaceholder.Tests.csproj --no-restore --configuration Release -p:UseSharedCompilation=false
+
+      - name: Test .NET projects
+        run: dotnet test tests/TheBuilder.BlurPlaceholder.Tests/TheBuilder.BlurPlaceholder.Tests.csproj --no-build --configuration Release
+
+      - name: Build client and docs
+        run: pnpm build
+
+      - name: Verify JavaScript decoder fixtures
+        run: pnpm --filter @thebuilder/blur-placeholder-client test:decoders
+
+      - name: Pack NuGet package
+        run: dotnet pack src/TheBuilder.BlurPlaceholder/TheBuilder.BlurPlaceholder.csproj --no-build --configuration Release --output artifacts

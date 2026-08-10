@@ -1,0 +1,42 @@
+{
+  "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
+  "AuthorDetails": {
+    "Name": "Daniel Schmidt",
+    "Description": "Developer focused on useful, editor-friendly digital experiences and integrations.",
+    "Url": "https://github.com/thebuilder",
+    "ImageUrl": "https://github.com/thebuilder.png",
+    "SyncContributorsFromRepository": true
+  },
+  "Category": "Developer Tools",
+  "AlternateCategory": "Headless",
+  "Title": "Blur Placeholder",
+  "Description": "Generate WebP, BlurHash, or ThumbHash placeholders for Umbraco Image media and deliver them as one frontend-ready string.",
+  "DocumentationUrl": "https://github.com/thebuilder/blur-placeholder/tree/main/apps/docs/content",
+  "IssueTrackerUrl": "https://github.com/thebuilder/blur-placeholder/issues",
+  "LicenseTypes": [
+    "Free"
+  ],
+  "PackageType": "Package",
+  "Screenshots": [
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/thebuilder/blur-placeholder/refs/heads/main/apps/docs/content/screenshots/blur-placeholder-media.png",
+      "Caption": "Preview and copy the generated placeholder directly from an Image media item in the Umbraco backoffice."
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/thebuilder/blur-placeholder/refs/heads/main/apps/docs/content/screenshots/delivery-api-preview.png",
+      "Caption": "Verify that the published media response exposes the generated blurPlaceholder string through the Delivery API."
+    }
+  ],
+  "Tags": [
+    "media",
+    "images",
+    "image placeholders",
+    "blur placeholder",
+    "BlurHash",
+    "ThumbHash",
+    "WebP",
+    "Delivery API",
+    "headless",
+    "performance"
+  ]
+}

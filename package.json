@@ -1,0 +1,10 @@
+{
+  "name": "thebuilder-blur-placeholder",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "build": "pnpm --filter @thebuilder/blur-placeholder-client build && pnpm --filter @thebuilder/blur-placeholder-docs build",
+    "build:client": "pnpm --filter @thebuilder/blur-placeholder-client build",
+    "build:docs": "pnpm --filter @thebuilder/blur-placeholder-docs build"
+  }
+}

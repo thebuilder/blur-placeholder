@@ -1,0 +1,20 @@
+{
+  "name": "@thebuilder/blur-placeholder-client",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "watch": "tsc && vite build --watch",
+    "build": "tsc && vite build",
+    "test:decoders": "node test/decoders.mjs"
+  },
+  "dependencies": {
+    "blurhash": "^2.0.5",
+    "thumbhash": "^0.1.1"
+  },
+  "devDependencies": {
+    "@umbraco-cms/backoffice": "^17.5.3",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}

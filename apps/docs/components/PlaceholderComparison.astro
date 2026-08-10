@@ -1,0 +1,62 @@
+---
+import results from "../public/demos/generated/results.json";
+
+function formatBytes(bytes: number) {
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+---
+
+<div class="comparison-list">
+  {results.map((result) => (
+    <article class="comparison">
+      <header>
+        <h3>{result.Alt}</h3>
+        <span>{formatBytes(result.SourceBytes)} source</span>
+      </header>
+      <div class="comparison-grid">
+        <figure class="demo-figure">
+          <div class="demo-frame"><img src={`/demos/generated/${result.Slug}-source.webp`} alt={result.Alt} loading="lazy" /></div>
+          <figcaption><strong>Original</strong><span>Reference image</span></figcaption>
+        </figure>
+        <figure class="demo-figure placeholder">
+          <div class="demo-frame"><img src={`/demos/generated/${result.Slug}-webp.webp`} alt={`Tiny WebP placeholder for ${result.Alt}`} loading="lazy" /></div>
+          <figcaption><strong>Tiny WebP</strong><span>{result.Webp.BinaryBytes} B WebP · {result.Webp.Characters} data URL characters</span></figcaption>
+        </figure>
+        <figure class="demo-figure placeholder">
+          <div class="demo-frame"><img src={`/demos/generated/${result.Slug}-blurhash.webp`} alt={`BlurHash placeholder for ${result.Alt}`} loading="lazy" /></div>
+          <figcaption>
+            <strong>BlurHash</strong>
+            <span>{result.BlurHash.NativeBytes} B native · {result.BlurHash.DecodedWebp.BinaryBytes} B decoded WebP</span>
+            <code title={result.BlurHash.NativeValue}>{result.BlurHash.NativeValue}</code>
+          </figcaption>
+        </figure>
+        <figure class="demo-figure placeholder">
+          <div class="demo-frame"><img src={`/demos/generated/${result.Slug}-thumbhash.webp`} alt={`ThumbHash placeholder for ${result.Alt}`} loading="lazy" /></div>
+          <figcaption>
+            <strong>ThumbHash</strong>
+            <span>{result.ThumbHash.NativeBytes} B native · {result.ThumbHash.DecodedWebp.BinaryBytes} B decoded WebP</span>
+            <code title={result.ThumbHash.NativeValue}>{result.ThumbHash.NativeValue}</code>
+          </figcaption>
+        </figure>
+      </div>
+    </article>
+  ))}
+</div>
+
+<style>
+  .comparison-list { display: grid; gap: 2.5rem; margin-block: 1.5rem 2.5rem; }
+  .comparison { display: grid; gap: 1rem; }
+  .comparison header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+  .comparison h3 { margin: 0; }
+  .comparison header span { color: var(--sl-color-gray-3, currentColor); font-size: .875rem; white-space: nowrap; }
+  .comparison-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
+  .demo-figure { min-width: 0; margin: 0; border: 1px solid color-mix(in srgb, currentColor 16%, transparent); border-radius: .75rem; overflow: hidden; }
+  .demo-frame { display: grid; place-items: center; height: 13rem; overflow: hidden; background-color: #e8edf3; background-image: linear-gradient(45deg, #d7dde5 25%, transparent 25%), linear-gradient(-45deg, #d7dde5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #d7dde5 75%), linear-gradient(-45deg, transparent 75%, #d7dde5 75%); background-position: 0 0, 0 8px, 8px -8px, -8px 0; background-size: 16px 16px; }
+  .demo-frame img { width: 100%; height: 100%; object-fit: contain; }
+  .demo-figure.placeholder .demo-frame img { filter: blur(12px); transform: scale(1.08); }
+  .demo-figure figcaption { display: grid; gap: .25rem; padding: .75rem; }
+  .demo-figure figcaption span { color: var(--sl-color-gray-3, currentColor); font-size: .8rem; line-height: 1.35; }
+  .demo-figure code { display: block; overflow: hidden; font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
+  @media (max-width: 64rem) { .comparison-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 34rem) { .comparison-grid { grid-template-columns: 1fr; } }
+</style>

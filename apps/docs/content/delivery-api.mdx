@@ -1,0 +1,231 @@
+---
+title: Delivery API
+description: Request the placeholder explicitly without changing core media conversion.
+---
+
+The extension does not replace Umbraco's shallow media converter. Request the property explicitly through the Delivery API:
+
+Enable the Delivery API and its media endpoints in the host application first:
+
+```json
+{
+  "Umbraco": {
+    "CMS": {
+      "DeliveryApi": {
+        "Enabled": true,
+        "PublicAccess": true,
+        "Media": {
+          "Enabled": true,
+          "PublicAccess": true
+        }
+      }
+    }
+  }
+}
+```
+
+```http
+GET /umbraco/delivery/api/v2/media/item/{mediaId}?expand=properties[$all]&fields=properties[blurPlaceholder]
+```
+
+For a picker response, use the same expansion and field selection. Direct media responses can use the same property selection. This keeps the default response shape stable and makes the extra payload opt-in.
+
+## Example API response
+
+The requested property appears in the media item's `properties` object as one plain string:
+
+```json
+{
+  "path": "/station-platform.png/",
+  "createDate": "2026-08-10T08:46:31.004237Z",
+  "updateDate": "2026-08-10T08:46:31.004237Z",
+  "id": "d55605e1-c63a-42cd-86a6-a99adca2a565",
+  "name": "station-platform.png",
+  "mediaType": "Image",
+  "url": "/media/n1hbay0t/station-platform.png",
+  "extension": "png",
+  "width": 1536,
+  "height": 1024,
+  "bytes": 2468341,
+  "properties": {
+    "blurPlaceholder": "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAABwAwCdASoQAAsALoVCoVClJSUlBQCESzgE6AxZblsod8ldbAAA/vs0YnnRmszUoA9/XeE6xi8oqvuYhNTIbmf34VbF388vudNZmZ7B4pF4N5Kwiixxuf2/w1XnA/yuEyJteMig85jSjuP1fcG9JRe+aOBYEAAA"
+  },
+  "focalPoint": {
+    "left": 0.5,
+    "top": 0.5
+  },
+  "crops": []
+}
+```
+
+## Render the default output
+
+With the default `DecodeToDataUrl: true`, every algorithm produces a WebP data URL that can be passed directly to the framework's image component.
+
+<CodeGroup>
+
+```tsx Next.js
+import Image from "next/image";
+
+export function MediaImage({ media }: { media: MediaItem }) {
+  return (
+    <Image
+      src={media.url}
+      alt={media.alt}
+      width={media.width}
+      height={media.height}
+      placeholder={media.properties.blurPlaceholder ? "blur" : "empty"}
+      blurDataURL={media.properties.blurPlaceholder ?? undefined}
+    />
+  );
+}
+```
+
+```vue Nuxt
+<script setup lang="ts">
+defineProps<{ media: MediaItem }>();
+</script>
+
+<template>
+  <NuxtImg
+    :src="media.url"
+    :alt="media.alt"
+    :width="media.width"
+    :height="media.height"
+    :placeholder="media.properties.blurPlaceholder || undefined"
+  />
+</template>
+```
+
+</CodeGroup>
+
+This does not require a browser decoder and is the recommended Delivery API contract when payload simplicity matters. The data URL is a placeholder, not a replacement for the real image URL.
+
+## Consume a native hash
+
+Set `DecodeToDataUrl` to `false` only when saving the smaller native representation is worth decoding it in your application server.
+
+By default, native values remain self-describing: `blurhash:` adds 9 characters and `thumbhash:` adds 10. The repeated prefixes compress to almost nothing when the Delivery API response uses gzip or Brotli, and the discriminator prevents a configuration change from sending a ThumbHash to a BlurHash decoder.
+
+Set `IncludeAlgorithmPrefix` to `false` to remove that overhead when the consuming application already knows the configured algorithm. The examples below pass `"thumbhash"` explicitly for that case; change it to match `Algorithm` in `appsettings.json`.
+
+Install `blurhash`, `thumbhash`, and `sharp`. The framework examples decode the hash in a server component and pass only the resulting WebP data URL to the image component:
+
+<CodeGroup>
+
+```tsx Next.js
+import Image from "next/image";
+import { decodePlaceholder } from "@/lib/decode-placeholder.server";
+
+// App Router components are Server Components unless marked "use client".
+export async function MediaImage({ media }: { media: MediaItem }) {
+  const placeholder = await decodePlaceholder(
+    media.properties.blurPlaceholder,
+    media.width,
+    media.height,
+    "thumbhash",
+  );
+
+  return (
+    <Image
+      src={media.url}
+      alt={media.alt}
+      width={media.width}
+      height={media.height}
+      placeholder={placeholder ? "blur" : "empty"}
+      blurDataURL={placeholder}
+    />
+  );
+}
+```
+
+```vue Nuxt · MediaImage.server.vue
+<script setup lang="ts">
+import { decodePlaceholder } from "~/utils/decode-placeholder.server";
+
+const props = defineProps<{ media: MediaItem }>();
+const placeholder = await decodePlaceholder(
+  props.media.properties.blurPlaceholder,
+  props.media.width,
+  props.media.height,
+  "thumbhash",
+);
+</script>
+
+<template>
+  <NuxtImg
+    :src="media.url"
+    :alt="media.alt"
+    :width="media.width"
+    :height="media.height"
+    :placeholder="placeholder"
+  />
+</template>
+```
+
+</CodeGroup>
+
+Keep the decoder in a server-only module shared by the component. A prefix takes precedence; the final `algorithm` argument is only needed for unprefixed values.
+
+```ts title="decode-placeholder.server.ts"
+import sharp from "sharp";
+import { decode } from "blurhash";
+import { thumbHashToRGBA } from "thumbhash";
+
+type NativeAlgorithm = "blurhash" | "thumbhash";
+
+export async function decodePlaceholder(
+  value: string | null | undefined,
+  sourceWidth: number,
+  sourceHeight: number,
+  algorithm?: NativeAlgorithm,
+): Promise<string | undefined> {
+  if (!value) return undefined;
+  if (value.startsWith("data:image/")) return value;
+
+  if (value.startsWith("thumbhash:")) {
+    return decodeThumbHash(value.slice("thumbhash:".length));
+  }
+
+  if (value.startsWith("blurhash:")) {
+    return decodeBlurHash(value.slice("blurhash:".length));
+  }
+
+  if (algorithm === "thumbhash") return decodeThumbHash(value);
+  if (algorithm === "blurhash") return decodeBlurHash(value);
+
+  throw new Error("An unprefixed value requires its configured algorithm.");
+
+  async function decodeThumbHash(encodedHash: string) {
+    const bytes = Uint8Array.from(Buffer.from(encodedHash, "base64"));
+    const { w, h, rgba } = thumbHashToRGBA(bytes);
+    return rgbaToWebpDataUrl(rgba, w, h);
+  }
+
+  function decodeBlurHash(hash: string) {
+    const scale = 32 / Math.max(sourceWidth, sourceHeight);
+    const width = Math.max(1, Math.round(sourceWidth * scale));
+    const height = Math.max(1, Math.round(sourceHeight * scale));
+    const rgba = decode(hash, width, height);
+    return rgbaToWebpDataUrl(rgba, width, height);
+  }
+}
+
+async function rgbaToWebpDataUrl(
+  rgba: Uint8Array | Uint8ClampedArray,
+  width: number,
+  height: number,
+) {
+  const webp = await sharp(Buffer.from(rgba), {
+    raw: { width, height, channels: 4 },
+  })
+    .webp({ quality: 60 })
+    .toBuffer();
+
+  return `data:image/webp;base64,${webp.toString("base64")}`;
+}
+```
+
+Next.js App Router components are Server Components by default. Nuxt's `.server.vue` component convention requires [`experimental.componentIslands: true`](https://nuxt.com/docs/3.x/directory-structure/components#server-components) in `nuxt.config.ts`. In both cases, the hash decoder and `sharp` stay on the server; the rendered component receives only the WebP data URL.
+
+The utility calls the [Wolt BlurHash JavaScript decoder](https://github.com/woltapp/blurhash/tree/master/TypeScript) and the [official ThumbHash JavaScript implementation](https://github.com/evanw/thumbhash). BlurHash does not contain an aspect ratio, so the example derives its 32px decode size from the media dimensions; ThumbHash restores its encoded dimensions itself.

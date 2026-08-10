@@ -1,0 +1,58 @@
+---
+title: Overview
+description: Generate compact image placeholders once in Umbraco and deliver one simple string to your frontend.
+---
+
+Blur Placeholder adds one generated, read-only `blurPlaceholder` string to Umbraco's default Image media type. Generate it when the media file changes, store it with the image, and opt into it through the Delivery API when a frontend needs a loading placeholder.
+
+## See it in Umbraco
+
+The read-only media property previews the generated value, reports its representation and size, and lets you copy it directly from the backoffice.
+
+<Frame caption="Preview and copy the generated placeholder from an Image media item.">
+
+![A generated blur placeholder on an Image media item in the Umbraco backoffice](./screenshots/blur-placeholder-media.png)
+
+</Frame>
+
+:::tip[Start with WebP]
+The default tiny WebP is the simplest choice: it is ready to use as an image source and requires no client decoder. Choose a native hash when every byte matters or when its visual and metadata advantages justify decoder code in the client.
+:::
+
+## Compare the three approaches
+
+Every result below was produced by this package with its documented defaults. The tiny images are enlarged and blurred with CSS, which is how a placeholder is normally presented. The source set deliberately includes landscape, portrait, and transparent artwork.
+
+<PlaceholderComparison />
+
+The measurements separate the compact native hash from the optional decoded WebP representation. A data URL also includes roughly one-third base64 overhead plus its MIME prefix; the table reports both binary WebP bytes and total data URL characters.
+
+## Which approach should I choose?
+
+| Approach | Best when | Advantages | Trade-offs |
+| --- | --- | --- | --- |
+| **Tiny WebP** | You want a browser-ready `blurDataURL` with no runtime library. | Simplest integration; predictable dimensions and output; works anywhere an image URL works. | Usually larger than a native hash; aspect ratio must still come from the media metadata. |
+| **BlurHash** | You want a very short configurable text value and already have a decoder. | Compact text; adjustable X/Y component detail; broad ecosystem support. | Requires client decoding when stored natively; does not encode aspect ratio or alpha. |
+| **ThumbHash** | Aspect ratio, accurate average color, or transparency matters. | Encodes aspect ratio and alpha; strong color reproduction; compact binary representation. | Requires client decoding when stored natively; algorithm detail is not configurable. |
+| **Hash decoded to WebP** | You prefer the hash's reconstructed look but cannot ship a decoder. | Browser-ready output while preserving the BlurHash or ThumbHash aesthetic. | Removes most of the native hash's payload advantage; server output is larger than the raw hash. |
+
+ThumbHash's upstream documentation describes its aspect-ratio, color, detail, and alpha advantages over BlurHash. BlurHash remains attractive when its tunable component grid or larger decoder ecosystem is more important.
+
+## Libraries and attribution
+
+- [blurhash.net](https://github.com/MarkusPalcer/blurhash.net) provides the ImageSharp-compatible C# BlurHash encoder and decoder used by the package.
+- [BlurHash for JavaScript](https://github.com/woltapp/blurhash/tree/master/TypeScript) is used by the Backoffice preview for independent native-hash verification.
+- [ThumbHash](https://github.com/evanw/thumbhash) documents the algorithm, official JavaScript decoder, and interactive [ThumbHash demo](https://evanw.github.io/thumbhash/).
+- The integrated C# ThumbHash port is attributed to [pull request 50](https://github.com/evanw/thumbhash/pull/50) and pinned to its reviewed commit. See [License and attribution](/license).
+
+## Stored value
+
+The property contains one self-describing string, never a JSON envelope:
+
+| Prefix | Representation |
+| --- | --- |
+| `data:image/webp;base64,` | Direct tiny WebP or a hash reconstructed and encoded as WebP. |
+| `blurhash:` | Native BlurHash text. The prefix is optional when `IncludeAlgorithmPrefix` is disabled. |
+| `thumbhash:` | Base64-encoded native ThumbHash bytes. The prefix is optional when `IncludeAlgorithmPrefix` is disabled. |
+
+Continue with the [Quickstart](/quickstart), then use the [Delivery API guide](/delivery-api) to consume the field.

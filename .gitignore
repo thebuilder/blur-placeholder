@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.astro/
+apps/docs/.blume/
+apps/docs/dist/
+artifacts/
+*.user
+*.suo
+.DS_Store
+samples/**/umbraco/Data/
+samples/**/umbraco/Logs/
+samples/**/umbraco/Media/
+samples/**/umbraco/Models/
+umbraco/

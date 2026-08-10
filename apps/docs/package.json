@@ -1,0 +1,15 @@
+{
+  "name": "@thebuilder/blur-placeholder-docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "blume dev",
+    "build": "blume build"
+  },
+  "dependencies": {
+    "blume": "^1.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0"
+  }
+}

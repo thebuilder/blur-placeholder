@@ -1,0 +1,77 @@
+[
+  {
+    "Slug": "alpine-lake",
+    "Alt": "Wide alpine lake at sunrise",
+    "SourceBytes": 2892535,
+    "Webp": {
+      "Characters": 219,
+      "BinaryBytes": 146
+    },
+    "BlurHash": {
+      "NativeValue": "blurhash:LRB;FGH;obI[.AR%WTazpLjEoIbb",
+      "NativeBytes": 37,
+      "DecodedWebp": {
+        "Characters": 211,
+        "BinaryBytes": 140
+      }
+    },
+    "ThumbHash": {
+      "NativeValue": "thumbhash:WdcJJYZwhmd\u002Bd3d7iHZqpJ918mlF",
+      "NativeBytes": 38,
+      "DecodedWebp": {
+        "Characters": 199,
+        "BinaryBytes": 132
+      }
+    }
+  },
+  {
+    "Slug": "greenhouse-portrait",
+    "Alt": "Tall bird-of-paradise plant in a greenhouse",
+    "SourceBytes": 2747908,
+    "Webp": {
+      "Characters": 207,
+      "BinaryBytes": 136
+    },
+    "BlurHash": {
+      "NativeValue": "blurhash:LGCiv%kXIp%2_2%2S3x[~CoNI:xa",
+      "NativeBytes": 37,
+      "DecodedWebp": {
+        "Characters": 179,
+        "BinaryBytes": 116
+      }
+    },
+    "ThumbHash": {
+      "NativeValue": "thumbhash:FAkKBQRXaK\u002Bo6Gdoh4d3VzChYkn5",
+      "NativeBytes": 38,
+      "DecodedWebp": {
+        "Characters": 191,
+        "BinaryBytes": 126
+      }
+    }
+  },
+  {
+    "Slug": "balloon-alpha",
+    "Alt": "Paper hot-air balloon with transparency",
+    "SourceBytes": 1026064,
+    "Webp": {
+      "Characters": 467,
+      "BinaryBytes": 332
+    },
+    "BlurHash": {
+      "NativeValue": "blurhash:LkFE1Ss:0zRk=yoLI:ayI:WVs:oL",
+      "NativeBytes": 37,
+      "DecodedWebp": {
+        "Characters": 219,
+        "BinaryBytes": 146
+      }
+    },
+    "ThumbHash": {
+      "NativeValue": "thumbhash:ZGmCDQA1uwKNZWlmRgd4WcEGCJeLdnVZZw==",
+      "NativeBytes": 46,
+      "DecodedWebp": {
+        "Characters": 615,
+        "BinaryBytes": 442
+      }
+    }
+  }
+]
