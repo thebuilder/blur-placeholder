@@ -15,6 +15,16 @@ export default defineConfig({
   content: {
     root: "content"
   },
+  navigation: {
+    tabs: [{ label: "Docs", path: "/", href: "/overview" }]
+  },
+  deployment: {
+    output: "static",
+    site: "https://blur-placeholder.vercel.app"
+  },
+  seo: {
+    og: { enabled: false }
+  },
   theme: {
     accent: "#2563eb"
   }

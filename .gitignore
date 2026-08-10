@@ -5,6 +5,8 @@
 **/.astro/
 apps/docs/.blume/
 apps/docs/dist/
+apps/docs/public/og/
+apps/docs/public/opengraph-image.png
 artifacts/
 *.user
 *.suo
