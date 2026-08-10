@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TheBuilder.BlurPlaceholder.Configuration;
@@ -15,8 +16,7 @@ internal sealed class BlurPlaceholderMaintenanceJob(
     IMediaService mediaService,
     IMediaTypeService mediaTypeService,
     MediaUrlGeneratorCollection mediaUrlGenerators,
-    MediaPlaceholderProcessor processor,
-    IBlurPlaceholderRetryQueue retryQueue,
+    IMediaPlaceholderProcessor processor,
     IOptions<BlurPlaceholderOptions> options,
     ILogger<BlurPlaceholderMaintenanceJob> logger) : IDistributedBackgroundJob
 {
@@ -35,26 +35,27 @@ internal sealed class BlurPlaceholderMaintenanceJob(
 
         var fingerprint = BlurPlaceholderFingerprint.Create(options.Value);
         var previousFingerprint = keyValueService.GetValue(Constants.BackfillFingerprintKey);
-        if (options.Value.BackfillExisting && !string.Equals(previousFingerprint, fingerprint, StringComparison.Ordinal))
-        {
-            if (await BackfillAsync(forceRegeneration: previousFingerprint is not null, cancellationToken))
-                keyValueService.SetValue(Constants.BackfillFingerprintKey, fingerprint);
-            return;
-        }
-
-        await RetryPendingAsync(cancellationToken);
+        var configurationChanged = options.Value.BackfillExisting
+            && !string.Equals(previousFingerprint, fingerprint, StringComparison.Ordinal);
+        var forceRegeneration = configurationChanged && previousFingerprint is not null;
+        if (await ProcessImagesAsync(fingerprint, forceRegeneration, cancellationToken) && configurationChanged)
+            keyValueService.SetValue(Constants.BackfillFingerprintKey, fingerprint);
     }
 
-    private async Task<bool> BackfillAsync(bool forceRegeneration, CancellationToken cancellationToken)
+    private async Task<bool> ProcessImagesAsync(
+        string fingerprint,
+        bool forceRegeneration,
+        CancellationToken cancellationToken)
     {
         var imageMediaType = mediaTypeService.Get(Constants.DefaultImageMediaTypeAlias);
         if (imageMediaType is null || !imageMediaType.PropertyTypes.Any(property => property.Alias == Constants.PropertyAlias))
             return false;
 
-        long pageIndex = 0;
+        var cursor = ReadCursor(fingerprint, forceRegeneration);
+        var pageIndex = cursor.NextPageIndex;
         long totalRecords;
         var generated = 0;
-        var queued = 0;
+        var retryCount = 0;
         var skipped = 0;
 
         do
@@ -64,9 +65,14 @@ internal sealed class BlurPlaceholderMaintenanceJob(
             foreach (var image in images.Where(media => forceRegeneration || NeedsBackfill(media)))
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                var previousValue = image.GetValue<string>(Constants.PropertyAlias);
                 var result = await processor.GenerateAsync(image, cancellationToken);
-                if (result.ChangesPlaceholder)
+                var currentValue = image.GetValue<string>(Constants.PropertyAlias);
+                if (result.Mutation.Kind != PlaceholderMutationKind.Keep
+                    && !string.Equals(previousValue, currentValue, StringComparison.Ordinal))
+                {
                     mediaService.Save(image);
+                }
 
                 if (result.Status == PlaceholderGenerationStatus.Generated)
                 {
@@ -74,8 +80,7 @@ internal sealed class BlurPlaceholderMaintenanceJob(
                 }
                 else if (result.Status == PlaceholderGenerationStatus.RetryableFailure)
                 {
-                    retryQueue.Enqueue(image.Key);
-                    queued++;
+                    retryCount++;
                 }
                 else
                 {
@@ -84,44 +89,38 @@ internal sealed class BlurPlaceholderMaintenanceJob(
             }
 
             pageIndex++;
+            WriteCursor(new BlurPlaceholderMaintenanceCursor(fingerprint, forceRegeneration, pageIndex));
         }
         while (pageIndex * PageSize < totalRecords);
 
+        ClearCursor();
+
         logger.LogInformation(
-            "Blur placeholder backfill generated {GeneratedCount}, queued {QueuedCount}, and skipped {SkippedCount} media items",
+            "Blur placeholder maintenance generated {GeneratedCount}, retained {RetryCount} items for retry, and skipped {SkippedCount} media items",
             generated,
-            queued,
+            retryCount,
             skipped);
         return true;
     }
 
-    private async Task RetryPendingAsync(CancellationToken cancellationToken)
+    private BlurPlaceholderMaintenanceCursor ReadCursor(string fingerprint, bool forceRegeneration)
     {
-        var pending = retryQueue.GetPending();
-        var completed = 0;
+        var stored = keyValueService.GetValue(Constants.MaintenanceCursorKey);
+        if (BlurPlaceholderMaintenanceCursor.TryRestore(stored, fingerprint, forceRegeneration, out var cursor))
+            return cursor;
 
-        foreach (var retry in pending)
+        if (!string.IsNullOrWhiteSpace(stored))
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            var media = mediaService.GetById(retry.MediaKey);
-            if (media is null || !CanProcess(media))
-            {
-                if (retryQueue.TryComplete(retry)) completed++;
-                continue;
-            }
-
-            var result = await processor.GenerateAsync(media, cancellationToken);
-            if (result.ChangesPlaceholder)
-                mediaService.Save(media);
-            if (result.Status == PlaceholderGenerationStatus.RetryableFailure) continue;
-            if (retryQueue.TryComplete(retry)) completed++;
+            logger.LogWarning("Ignored an invalid or obsolete blur placeholder maintenance cursor");
         }
 
-        logger.LogInformation(
-            "Blur placeholder retry processed {PendingCount} queued media items and completed {CompletedCount}",
-            pending.Count,
-            completed);
+        return BlurPlaceholderMaintenanceCursor.Start(fingerprint, forceRegeneration);
     }
+
+    private void WriteCursor(BlurPlaceholderMaintenanceCursor cursor) =>
+        keyValueService.SetValue(Constants.MaintenanceCursorKey, JsonSerializer.Serialize(cursor));
+
+    private void ClearCursor() => keyValueService.SetValue(Constants.MaintenanceCursorKey, string.Empty);
 
     private bool NeedsBackfill(IMedia media) =>
         CanProcess(media)
@@ -133,4 +132,42 @@ internal sealed class BlurPlaceholderMaintenanceJob(
         && media.HasProperty(Constants.SourcePropertyAlias)
         && media.TryGetMediaPath(Constants.SourcePropertyAlias, mediaUrlGenerators, out string? mediaPath)
         && !string.IsNullOrWhiteSpace(mediaPath);
+}
+
+internal sealed record BlurPlaceholderMaintenanceCursor(
+    string Fingerprint,
+    bool ForceRegeneration,
+    long NextPageIndex)
+{
+    public static BlurPlaceholderMaintenanceCursor Start(string fingerprint, bool forceRegeneration) =>
+        new(fingerprint, forceRegeneration, 0);
+
+    public static bool TryRestore(
+        string? stored,
+        string fingerprint,
+        bool forceRegeneration,
+        out BlurPlaceholderMaintenanceCursor cursor)
+    {
+        cursor = Start(fingerprint, forceRegeneration);
+        if (string.IsNullOrWhiteSpace(stored)) return true;
+
+        try
+        {
+            var restored = JsonSerializer.Deserialize<BlurPlaceholderMaintenanceCursor>(stored);
+            if (restored is null
+                || restored.NextPageIndex < 0
+                || restored.Fingerprint != fingerprint
+                || restored.ForceRegeneration != forceRegeneration)
+            {
+                return false;
+            }
+
+            cursor = restored;
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
 }

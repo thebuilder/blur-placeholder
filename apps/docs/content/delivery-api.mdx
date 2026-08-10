@@ -105,9 +105,7 @@ This does not require a browser decoder and is the recommended Delivery API cont
 
 Set `DecodeToDataUrl` to `false` only when saving the smaller native representation is worth decoding it in your application server.
 
-By default, native values remain self-describing: `blurhash:` adds 9 characters and `thumbhash:` adds 10. The repeated prefixes compress to almost nothing when the Delivery API response uses gzip or Brotli, and the discriminator prevents a configuration change from sending a ThumbHash to a BlurHash decoder.
-
-Set `IncludeAlgorithmPrefix` to `false` to remove that overhead when the consuming application already knows the configured algorithm. The examples below pass `"thumbhash"` explicitly for that case; change it to match `Algorithm` in `appsettings.json`.
+Native values remain self-describing: `blurhash:` adds 9 characters and `thumbhash:` adds 10. The repeated prefixes compress to almost nothing when the Delivery API response uses gzip or Brotli, and the discriminator prevents a configuration change from sending a ThumbHash to a BlurHash decoder.
 
 Install `blurhash`, `thumbhash`, and `sharp`. The framework examples decode the hash in a server component and pass only the resulting WebP data URL to the image component:
 
@@ -123,7 +121,6 @@ export async function MediaImage({ media }: { media: MediaItem }) {
     media.properties.blurPlaceholder,
     media.width,
     media.height,
-    "thumbhash",
   );
 
   return (
@@ -148,7 +145,6 @@ const placeholder = await decodePlaceholder(
   props.media.properties.blurPlaceholder,
   props.media.width,
   props.media.height,
-  "thumbhash",
 );
 </script>
 
@@ -165,20 +161,17 @@ const placeholder = await decodePlaceholder(
 
 </CodeGroup>
 
-Keep the decoder in a server-only module shared by the component. A prefix takes precedence; the final `algorithm` argument is only needed for unprefixed values.
+Keep the decoder in a server-only module shared by the component. Native values always carry the prefix used to select the decoder.
 
 ```ts title="decode-placeholder.server.ts"
 import sharp from "sharp";
 import { decode } from "blurhash";
 import { thumbHashToRGBA } from "thumbhash";
 
-type NativeAlgorithm = "blurhash" | "thumbhash";
-
 export async function decodePlaceholder(
   value: string | null | undefined,
   sourceWidth: number,
   sourceHeight: number,
-  algorithm?: NativeAlgorithm,
 ): Promise<string | undefined> {
   if (!value) return undefined;
   if (value.startsWith("data:image/")) return value;
@@ -191,10 +184,7 @@ export async function decodePlaceholder(
     return decodeBlurHash(value.slice("blurhash:".length));
   }
 
-  if (algorithm === "thumbhash") return decodeThumbHash(value);
-  if (algorithm === "blurhash") return decodeBlurHash(value);
-
-  throw new Error("An unprefixed value requires its configured algorithm.");
+  throw new Error("Unknown blur placeholder representation.");
 
   async function decodeThumbHash(encodedHash: string) {
     const bytes = Uint8Array.from(Buffer.from(encodedHash, "base64"));

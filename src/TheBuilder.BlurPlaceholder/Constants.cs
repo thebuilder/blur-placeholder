@@ -14,5 +14,5 @@ internal static class Constants
     public const string ThumbHashPrefix = "thumbhash:";
     public const string WebpDataUrlPrefix = "data:image/webp;base64,";
     public const string BackfillFingerprintKey = "TheBuilder.BlurPlaceholder.BackfillFingerprint";
-    public const string RetryQueueKey = "TheBuilder.BlurPlaceholder.RetryQueue";
+    public const string MaintenanceCursorKey = "TheBuilder.BlurPlaceholder.MaintenanceCursor";
 }

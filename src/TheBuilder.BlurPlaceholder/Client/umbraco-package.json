@@ -8,6 +8,5 @@
       "type": "bundle",
       "js": "/App_Plugins/TheBuilderBlurPlaceholder/the-builder-blur-placeholder.js"
     }
-  ],
-  "version": "0.1.0"
+  ]
 }

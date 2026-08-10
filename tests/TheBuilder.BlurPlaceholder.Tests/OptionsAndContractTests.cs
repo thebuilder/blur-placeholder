@@ -22,7 +22,7 @@ public sealed class OptionsAndContractTests
     {
         var first = new BlurPlaceholderOptions();
         var second = new BlurPlaceholderOptions();
-        second.IncludeAlgorithmPrefix = false;
+        second.DecodedDataUrl.WebpQuality = 61;
 
         Assert.NotEqual(BlurPlaceholderFingerprint.Create(first), BlurPlaceholderFingerprint.Create(second));
     }
@@ -62,12 +62,9 @@ public sealed class OptionsAndContractTests
     [Fact]
     public void Generation_results_make_placeholder_mutation_explicit()
     {
-        Assert.True(PlaceholderGenerationResult.Generated("value").ChangesPlaceholder);
-        Assert.Equal("value", PlaceholderGenerationResult.Generated("value").Value);
-        Assert.True(PlaceholderGenerationResult.Unsupported("unsupported").ChangesPlaceholder);
-        Assert.Equal(string.Empty, PlaceholderGenerationResult.Unsupported("unsupported").Value);
-        Assert.False(PlaceholderGenerationResult.RetryableFailure("retry").ChangesPlaceholder);
-        Assert.Null(PlaceholderGenerationResult.RetryableFailure("retry").Value);
-        Assert.False(PlaceholderGenerationResult.Disabled.ChangesPlaceholder);
+        Assert.Equal(PlaceholderMutation.Set("value"), PlaceholderGenerationResult.Generated("value").Mutation);
+        Assert.Equal(PlaceholderMutation.Clear, PlaceholderGenerationResult.Unsupported("unsupported").Mutation);
+        Assert.Equal(PlaceholderMutation.Clear, PlaceholderGenerationResult.RetryableFailure("retry").Mutation);
+        Assert.Equal(PlaceholderMutation.Keep, PlaceholderGenerationResult.Disabled.Mutation);
     }
 }

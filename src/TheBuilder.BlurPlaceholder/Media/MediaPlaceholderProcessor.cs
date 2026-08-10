@@ -12,7 +12,7 @@ internal sealed class MediaPlaceholderProcessor(
     IPlaceholderGenerator generator,
     IMediaService mediaService,
     MediaUrlGeneratorCollection mediaUrlGenerators,
-    ILogger<MediaPlaceholderProcessor> logger)
+    ILogger<MediaPlaceholderProcessor> logger) : IMediaPlaceholderProcessor
 {
     public async Task<PlaceholderGenerationResult> GenerateAsync(
         IMedia media,
@@ -46,7 +46,18 @@ internal sealed class MediaPlaceholderProcessor(
 
     private static void Apply(IMedia media, PlaceholderGenerationResult result)
     {
-        if (result.ChangesPlaceholder)
-            media.SetValue(Constants.PropertyAlias, result.Value);
+        switch (result.Mutation.Kind)
+        {
+            case PlaceholderMutationKind.Keep:
+                return;
+            case PlaceholderMutationKind.Clear:
+                media.SetValue(Constants.PropertyAlias, string.Empty);
+                return;
+            case PlaceholderMutationKind.Set:
+                media.SetValue(Constants.PropertyAlias, result.Mutation.Value);
+                return;
+            default:
+                throw new InvalidOperationException($"Unsupported placeholder mutation {result.Mutation.Kind}.");
+        }
     }
 }

@@ -7,34 +7,24 @@ import {
   property,
   state,
 } from "@umbraco-cms/backoffice/external/lit";
-import { decode as decodeBlurHash } from "blurhash";
-import { thumbHashToRGBA } from "thumbhash";
+import { decodePlaceholder } from "./decode-placeholder.js";
 
-type PlaceholderKind = "webp" | "blurhash" | "thumbhash" | "unknown";
-
-interface PlaceholderInfo {
-  kind: PlaceholderKind;
-  label: string;
-  raw: string;
-  preview?: string;
-  width?: number;
-  height?: number;
-}
-
-interface PlaceholderDecodeResult {
-  info: PlaceholderInfo;
-  error?: string;
-}
+type DecodeState =
+  | { status: "empty" }
+  | { status: "pending"; raw: string }
+  | { status: "ready"; raw: string; label: string; preview: string; width: number; height: number }
+  | { status: "invalid"; raw: string; error: string };
 
 @customElement("thebuilder-blur-placeholder-property-editor")
 export class TheBuilderBlurPlaceholderPropertyEditorElement extends UmbLitElement {
   @property({ type: String }) value = "";
   @property({ type: Boolean, reflect: true }) readonly = false;
 
-  @state() private _info?: PlaceholderInfo;
-  @state() private _error?: string;
+  @state() private _decodeState: DecodeState = { status: "empty" };
+  @state() private _copyError?: string;
   @state() private _copied = false;
   @state() private _blurred = true;
+  private _decodeRequest = 0;
 
   protected override willUpdate(changedProperties: Map<string, unknown>) {
     if (changedProperties.has("value")) void this._decodeValue();
@@ -42,24 +32,40 @@ export class TheBuilderBlurPlaceholderPropertyEditorElement extends UmbLitElemen
 
   private async _decodeValue() {
     const raw = this.value.trim();
+    const request = ++this._decodeRequest;
     this._copied = false;
     this._blurred = true;
-    this._error = undefined;
+    this._copyError = undefined;
 
     if (!raw) {
-      this._info = undefined;
+      this._decodeState = { status: "empty" };
       return;
     }
 
+    this._decodeState = { status: "pending", raw };
     try {
       const decoded = await decodePlaceholder(raw);
-      if (this.value.trim() !== raw) return;
-      this._info = decoded.info;
-      this._error = decoded.error;
+      const preview = decoded.kind === "webp"
+        ? decoded.dataUrl
+        : rgbaToDataUrl(decoded.rgba, decoded.width, decoded.height);
+      const dimensions = decoded.kind === "webp"
+        ? await getImageDimensions(preview)
+        : { width: decoded.width, height: decoded.height };
+      if (request !== this._decodeRequest) return;
+      this._decodeState = {
+        status: "ready",
+        raw,
+        label: decoded.label,
+        preview,
+        ...dimensions,
+      };
     } catch (error) {
-      if (this.value.trim() !== raw) return;
-      this._info = { kind: "unknown", label: "Malformed value", raw };
-      this._error = error instanceof Error ? error.message : "The placeholder could not be decoded.";
+      if (request !== this._decodeRequest) return;
+      this._decodeState = {
+        status: "invalid",
+        raw,
+        error: error instanceof Error ? error.message : "The placeholder could not be decoded.",
+      };
     }
   }
 
@@ -70,7 +76,7 @@ export class TheBuilderBlurPlaceholderPropertyEditorElement extends UmbLitElemen
       await navigator.clipboard.writeText(this.value);
       this._copied = true;
     } catch {
-      this._error = "Clipboard access was not granted.";
+      this._copyError = "Clipboard access was not granted.";
     }
   }
 
@@ -79,27 +85,28 @@ export class TheBuilderBlurPlaceholderPropertyEditorElement extends UmbLitElemen
   }
 
   override render() {
-    const info = this._info;
-    const aspectRatio = info?.width && info.height ? `${info.width} / ${info.height}` : "4 / 3";
+    const state = this._decodeState;
+    const ready = state.status === "ready" ? state : undefined;
+    const aspectRatio = ready ? `${ready.width} / ${ready.height}` : "4 / 3";
     return html`
       <div class="editor">
         <div class="preview" style="aspect-ratio: ${aspectRatio}">
-          ${info?.preview
+          ${ready
             ? html`<img
                 class=${this._blurred ? "blurred" : nothing}
-                src="${info.preview}"
+                src="${ready.preview}"
                 alt="Generated image placeholder"
               />`
             : html`<div class="empty">
-                ${this.value
-                  ? "No preview"
-                  : html`<em>Blur placeholder will be generated when the image is saved.</em>`}
+                ${state.status === "empty"
+                  ? html`<em>Blur placeholder will be generated when the image is saved.</em>`
+                  : state.status === "pending" ? "Decoding preview…" : "No preview"}
               </div>`}
         </div>
         <div class="details">
           <div class="metadata">
-            <span>${info?.label ?? "Empty"}</span>
-            ${info?.width && info?.height ? html`<span>${info.width} × ${info.height}</span>` : nothing}
+            <span>${ready?.label ?? (state.status === "invalid" ? "Malformed value" : state.status === "pending" ? "Loading" : "Empty")}</span>
+            ${ready ? html`<span>${ready.width} × ${ready.height}</span>` : nothing}
             <span>${this.value.length} characters</span>
           </div>
           <code title="${this.value}">${truncate(this.value)}</code>
@@ -110,11 +117,12 @@ export class TheBuilderBlurPlaceholderPropertyEditorElement extends UmbLitElemen
             <uui-toggle
               label="Blur preview"
               .checked=${this._blurred}
-              ?disabled=${!info?.preview}
+              ?disabled=${!ready}
               @change=${this._toggleBlur}
             ></uui-toggle>
           </div>
-          ${this._error ? html`<p class="error" role="alert">${this._error}</p>` : nothing}
+          ${state.status === "invalid" ? html`<p class="error" role="alert">${state.error}</p>` : nothing}
+          ${this._copyError ? html`<p class="error" role="alert">${this._copyError}</p>` : nothing}
         </div>
       </div>
     `;
@@ -139,91 +147,6 @@ export class TheBuilderBlurPlaceholderPropertyEditorElement extends UmbLitElemen
 
 function truncate(value: string, length = 96) {
   return value.length > length ? `${value.slice(0, length)}…` : value;
-}
-
-async function decodePlaceholder(raw: string): Promise<PlaceholderDecodeResult> {
-  if (raw.startsWith("data:image/webp;base64,")) {
-    const { width, height } = await getImageDimensions(raw);
-    return {
-      info: { kind: "webp", label: "WebP data URL", raw, preview: raw, width, height },
-    };
-  }
-
-  if (raw.startsWith("blurhash:")) {
-    return decodeBlurHashValue(raw.slice("blurhash:".length), raw);
-  }
-
-  if (raw.startsWith("thumbhash:")) {
-    return decodeThumbHashValue(raw.slice("thumbhash:".length), raw);
-  }
-
-  if (looksLikeBlurHash(raw)) {
-    return decodeBlurHashValue(raw, raw, "BlurHash (unprefixed)");
-  }
-
-  try {
-    return decodeThumbHashValue(raw, raw, "ThumbHash (unprefixed)");
-  } catch {
-    return {
-      info: { kind: "unknown", label: "Unknown value", raw },
-      error: "The value is not a recognized WebP, BlurHash, or ThumbHash placeholder.",
-    };
-  }
-}
-
-function decodeBlurHashValue(
-  value: string,
-  raw: string,
-  label = "BlurHash",
-): PlaceholderDecodeResult {
-  const width = 32;
-  const height = 24;
-  const rgba = decodeBlurHash(value, width, height);
-  return {
-    info: {
-      kind: "blurhash",
-      label,
-      raw,
-      preview: rgbaToDataUrl(rgba, width, height),
-      width,
-      height,
-    },
-  };
-}
-
-function decodeThumbHashValue(
-  value: string,
-  raw: string,
-  label = "ThumbHash",
-): PlaceholderDecodeResult {
-  const bytes = base64ToBytes(value);
-  if (bytes.length < 5) throw new Error("ThumbHash is too short.");
-  const decoded = thumbHashToRGBA(bytes);
-  return {
-    info: {
-      kind: "thumbhash",
-      label,
-      raw,
-      preview: rgbaToDataUrl(decoded.rgba, decoded.w, decoded.h),
-      width: decoded.w,
-      height: decoded.h,
-    },
-  };
-}
-
-function looksLikeBlurHash(value: string) {
-  const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~";
-  if (value.length < 6 || [...value].some((character) => !alphabet.includes(character))) return false;
-
-  const sizeFlag = alphabet.indexOf(value[0]);
-  const componentsX = (sizeFlag % 9) + 1;
-  const componentsY = Math.floor(sizeFlag / 9) + 1;
-  return value.length === 4 + 2 * componentsX * componentsY;
-}
-
-function base64ToBytes(value: string) {
-  const binary = atob(value);
-  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
 }
 
 function rgbaToDataUrl(rgba: Uint8Array | Uint8ClampedArray, width: number, height: number) {

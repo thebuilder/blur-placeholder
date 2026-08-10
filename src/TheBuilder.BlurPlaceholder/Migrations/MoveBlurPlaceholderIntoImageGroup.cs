@@ -24,8 +24,9 @@ internal sealed class MoveBlurPlaceholderIntoImageGroup : AsyncMigrationBase
         var placeholderProperty = imageMediaType.PropertyTypes.FirstOrDefault(property => property.Alias == Constants.PropertyAlias)
             ?? throw new InvalidOperationException("The Blur placeholder property was not found.");
         var imageGroup = imageMediaType.PropertyGroups.FirstOrDefault(group =>
-            group.PropertyTypes?.Any(property => property.Alias == Constants.SourcePropertyAlias) is true)
-            ?? throw new InvalidOperationException("The default Image property group was not found.");
+            group.PropertyTypes?.Any(property => property.Alias == Constants.SourcePropertyAlias) is true);
+        if (imageGroup is null)
+            return;
 
         imageMediaType.MovePropertyType(Constants.PropertyAlias, imageGroup.Alias);
         placeholderProperty.SortOrder = imageGroup.PropertyTypes is null

@@ -9,8 +9,7 @@ using TheBuilder.BlurPlaceholder.Models;
 namespace TheBuilder.BlurPlaceholder.Media;
 
 internal sealed class BlurPlaceholderMediaSavingHandler(
-    MediaPlaceholderProcessor processor,
-    IBlurPlaceholderRetryQueue retryQueue,
+    IMediaPlaceholderProcessor processor,
     IOptions<BlurPlaceholderOptions> options,
     ILogger<BlurPlaceholderMediaSavingHandler> logger)
     : INotificationAsyncHandler<MediaSavingNotification>
@@ -24,15 +23,10 @@ internal sealed class BlurPlaceholderMediaSavingHandler(
             var result = await processor.GenerateAsync(media, cancellationToken);
             if (result.Status == PlaceholderGenerationStatus.RetryableFailure)
             {
-                retryQueue.Enqueue(media.Key);
                 logger.LogWarning(
-                    "Queued image media {MediaKey} for a targeted blur placeholder retry: {Message}",
+                    "Cleared the blur placeholder for image media {MediaKey}; maintenance will retry it: {Message}",
                     media.Key,
                     result.Message);
-            }
-            else
-            {
-                retryQueue.Complete(media.Key);
             }
         }
     }

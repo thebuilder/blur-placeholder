@@ -21,7 +21,7 @@ public sealed class PlaceholderGeneratorTests
         });
 
         Assert.Equal(PlaceholderGenerationStatus.Generated, result.Status);
-        var value = Assert.IsType<string>(result.Value);
+        var value = Assert.IsType<string>(result.Mutation.Value);
         Assert.StartsWith(Constants.WebpDataUrlPrefix, value, StringComparison.Ordinal);
 
         using var decoded = Image.Load(Convert.FromBase64String(value[Constants.WebpDataUrlPrefix.Length..]));
@@ -39,21 +39,7 @@ public sealed class PlaceholderGeneratorTests
         });
 
         Assert.Equal(PlaceholderGenerationStatus.Generated, result.Status);
-        Assert.StartsWith(Constants.BlurHashPrefix, result.Value, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public async Task BlurHash_prefix_can_be_omitted_from_native_output()
-    {
-        var result = await GenerateAsync(new BlurPlaceholderOptions
-        {
-            Algorithm = BlurPlaceholderAlgorithm.BlurHash,
-            DecodeToDataUrl = false,
-            IncludeAlgorithmPrefix = false,
-        });
-
-        Assert.Equal(PlaceholderGenerationStatus.Generated, result.Status);
-        Assert.DoesNotContain(":", result.Value, StringComparison.Ordinal);
+        Assert.StartsWith(Constants.BlurHashPrefix, result.Mutation.Value, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -74,7 +60,7 @@ public sealed class PlaceholderGeneratorTests
         var firstResult = await GenerateAsync(first);
         var secondResult = await GenerateAsync(second);
 
-        Assert.Equal(firstResult.Value, secondResult.Value);
+        Assert.Equal(firstResult.Mutation.Value, secondResult.Mutation.Value);
     }
 
     [Fact]
@@ -87,7 +73,7 @@ public sealed class PlaceholderGeneratorTests
         });
 
         Assert.Equal(PlaceholderGenerationStatus.Generated, result.Status);
-        Assert.StartsWith(Constants.WebpDataUrlPrefix, result.Value, StringComparison.Ordinal);
+        Assert.StartsWith(Constants.WebpDataUrlPrefix, result.Mutation.Value, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -116,22 +102,8 @@ public sealed class PlaceholderGeneratorTests
         });
 
         Assert.Equal(PlaceholderGenerationStatus.Generated, result.Status);
-        Assert.StartsWith(Constants.ThumbHashPrefix, result.Value, StringComparison.Ordinal);
-        Assert.Equal("thumbhash:4RUKNZhwd3eBiHh3iHiIh4BxB+eI", result.Value);
-    }
-
-    [Fact]
-    public async Task ThumbHash_prefix_can_be_omitted_from_native_output()
-    {
-        var result = await GenerateAsync(new BlurPlaceholderOptions
-        {
-            Algorithm = BlurPlaceholderAlgorithm.ThumbHash,
-            DecodeToDataUrl = false,
-            IncludeAlgorithmPrefix = false,
-        });
-
-        Assert.Equal(PlaceholderGenerationStatus.Generated, result.Status);
-        Assert.Equal("4RUKNZhwd3eBiHh3iHiIh4BxB+eI", result.Value);
+        Assert.StartsWith(Constants.ThumbHashPrefix, result.Mutation.Value, StringComparison.Ordinal);
+        Assert.Equal("thumbhash:4RUKNZhwd3eBiHh3iHiIh4BxB+eI", result.Mutation.Value);
     }
 
     [Fact]
@@ -144,7 +116,7 @@ public sealed class PlaceholderGeneratorTests
         });
 
         Assert.Equal(PlaceholderGenerationStatus.Generated, result.Status);
-        Assert.StartsWith(Constants.WebpDataUrlPrefix, result.Value, StringComparison.Ordinal);
+        Assert.StartsWith(Constants.WebpDataUrlPrefix, result.Mutation.Value, StringComparison.Ordinal);
     }
 
     [Fact]

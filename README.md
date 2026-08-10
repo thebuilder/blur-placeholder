@@ -24,7 +24,7 @@ Blur Placeholder is an Umbraco CMS 17 package that adds a generated, read-only `
 | **BlurHash** | Native `blurhash:…` string or a decoded WebP data URL | You want a compact, configurable hash and can decode it on the application server. |
 | **ThumbHash** | Base64-encoded `thumbhash:…` bytes or a decoded WebP data URL | Approximate aspect ratio, color, and transparency are useful. |
 
-The property always contains one string, never a JSON envelope. Native algorithm prefixes can be omitted when the consuming application already knows which algorithm is configured.
+The property always contains one self-describing string, never a JSON envelope. Native values use `blurhash:` or `thumbhash:` so consumers never have to guess which decoder to use.
 
 ## Install
 
@@ -46,7 +46,6 @@ Configuration is read from the `BlurPlaceholder` section in `appsettings.json`. 
     "Enabled": true,
     "Algorithm": "Webp",
     "DecodeToDataUrl": true,
-    "IncludeAlgorithmPrefix": true,
     "BackfillExisting": true,
     "RetryInterval": "12:00:00",
     "Webp": {
@@ -75,9 +74,8 @@ Configuration is read from the `BlurPlaceholder` section in `appsettings.json`. 
 | `Enabled` | `true` | Enables save-time generation and maintenance. Disabling it preserves existing values. |
 | `Algorithm` | `Webp` | Selects `Webp`, `BlurHash`, or `ThumbHash`. |
 | `DecodeToDataUrl` | `true` | Converts native hashes to browser-ready WebP data URLs before storage. WebP output is always a data URL. |
-| `IncludeAlgorithmPrefix` | `true` | Prefixes native values with `blurhash:` or `thumbhash:`. Disable only when the consumer already knows `Algorithm`. |
 | `BackfillExisting` | `true` | Processes existing images once for each output-settings fingerprint. |
-| `RetryInterval` | `12:00:00` | Controls targeted transient-failure retries; minimum one minute. |
+| `RetryInterval` | `12:00:00` | Controls maintenance scans for missing placeholders and transient-failure retries; minimum one minute. |
 | `Webp.MaximumDimension` | `16` | Longest edge of direct WebP output; valid range 16–64. |
 | `Webp.Quality` | `60` | Direct lossy WebP quality; valid range 1–100. |
 | `BlurHash.MaximumDimension` | `32` | Longest input edge passed to BlurHash; valid range 16–100. |

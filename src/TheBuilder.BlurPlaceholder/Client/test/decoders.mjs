@@ -1,18 +1,27 @@
 import assert from "node:assert/strict";
-import { decode } from "blurhash";
-import { thumbHashToRGBA } from "thumbhash";
+import { decodePlaceholder } from "../src/property-editor/decode-placeholder.ts";
 import fixtures from "./fixtures.json" with { type: "json" };
 
-const blurHash = fixtures.BlurHash.slice("blurhash:".length);
-const blurHashPixels = decode(blurHash, 32, 24);
-assert.equal(blurHashPixels.length, 32 * 24 * 4);
-assert.ok(blurHashPixels.some((channel) => channel !== 0));
+const blurHash = decodePlaceholder(fixtures.BlurHash);
+assert.equal(blurHash.kind, "blurhash");
+assert.equal(blurHash.rgba.length, blurHash.width * blurHash.height * 4);
+assert.ok(blurHash.rgba.some((channel) => channel !== 0));
 
-const thumbHash = fixtures.ThumbHash.slice("thumbhash:".length);
-const thumbHashBytes = Uint8Array.from(atob(thumbHash), (character) => character.charCodeAt(0));
-const thumbHashPixels = thumbHashToRGBA(thumbHashBytes);
-assert.ok(thumbHashPixels.w > 0);
-assert.ok(thumbHashPixels.h > 0);
-assert.equal(thumbHashPixels.rgba.length, thumbHashPixels.w * thumbHashPixels.h * 4);
+const thumbHash = decodePlaceholder(fixtures.ThumbHash);
+assert.equal(thumbHash.kind, "thumbhash");
+assert.ok(thumbHash.width > 0);
+assert.ok(thumbHash.height > 0);
+assert.equal(thumbHash.rgba.length, thumbHash.width * thumbHash.height * 4);
 
-console.log(`Decoded C# fixtures: BlurHash ${blurHashPixels.length / 4} pixels; ThumbHash ${thumbHashPixels.w}x${thumbHashPixels.h}.`);
+const webp = decodePlaceholder("data:image/webp;base64,AAAA");
+assert.deepEqual(webp, {
+  kind: "webp",
+  label: "WebP data URL",
+  dataUrl: "data:image/webp;base64,AAAA",
+});
+
+assert.throws(() => decodePlaceholder(fixtures.BlurHash.slice("blurhash:".length)), /prefixed/);
+assert.throws(() => decodePlaceholder("thumbhash:YWJjZGVm"), /expected/);
+assert.throws(() => decodePlaceholder("not-a-placeholder"), /prefixed/);
+
+console.log(`Decoded production fixtures: BlurHash ${blurHash.rgba.length / 4} pixels; ThumbHash ${thumbHash.width}x${thumbHash.height}.`);

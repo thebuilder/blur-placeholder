@@ -11,7 +11,6 @@ internal static class BlurPlaceholderFingerprint
             "|",
             options.Algorithm,
             options.DecodeToDataUrl,
-            options.IncludeAlgorithmPrefix,
             options.Webp.MaximumDimension,
             options.Webp.Quality,
             options.BlurHash.MaximumDimension,

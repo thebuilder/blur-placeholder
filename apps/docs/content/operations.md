@@ -3,11 +3,11 @@ title: Operations
 description: Backfill and retry behavior.
 ---
 
-The save handler only reacts to the default Image media type when `umbracoFile` is dirty. It clears the placeholder when the source is cleared or invalid, and it queues transient storage failures for a targeted retry.
+The save handler only reacts to the default Image media type when `umbracoFile` is dirty. It clears the placeholder when the source is cleared, invalid, or temporarily unavailable. The media save remains atomic: no separate retry state is changed before the media itself is persisted.
 
-Backfill is a fingerprinted one-off operation. The last completed fingerprint is stored separately from the media property. A new configuration fingerprint permits one new pass; normal maintenance only drains the retry queue and does not scan the whole library.
+Backfill is a fingerprinted operation. The last completed fingerprint is stored separately from the media property. A new configuration fingerprint permits one regeneration pass, while normal maintenance scans for empty placeholders left by transient failures.
 
-The retry queue uses one durable aggregate record with compare-and-set updates. Pending failures remain inspectable and are retried at the configured interval; completed entries are compacted out of the record.
+Maintenance checkpoints the next media-library page after each completed page. A cancelled or interrupted pass resumes from that checkpoint instead of restarting at page zero. The cursor is discarded when its fingerprint or regeneration mode no longer matches the active configuration.
 
 `Enabled: false` stops save-time generation and maintenance without deleting existing placeholders. Clearing or replacing a source file while generation is enabled updates the placeholder in the same media save.
 
@@ -25,11 +25,11 @@ Restart the host after installing the package and check the migration log and he
 
 ### A value is empty
 
-Confirm that the item uses the default `Image` media type and that `umbracoFile` contains a supported image. Unsupported or corrupt inputs clear stale output and are logged once. Transient file-system or blob-storage failures are queued by media key for retry.
+Confirm that the item uses the default `Image` media type and that `umbracoFile` contains a supported image. Unsupported or corrupt inputs clear stale output and are logged once. Transient file-system or blob-storage failures leave the property empty for the next maintenance pass.
 
 ### A native hash does not render
 
-Strip `blurhash:` before passing the text to a BlurHash decoder. For `thumbhash:`, strip the prefix and base64-decode the remaining bytes before calling ThumbHash. When `IncludeAlgorithmPrefix` is disabled, use the configured `Algorithm` to select the decoder. The Backoffice preview also recognizes unprefixed native values and reports malformed values.
+Strip `blurhash:` before passing the text to a BlurHash decoder. For `thumbhash:`, strip the prefix and base64-decode the remaining bytes before calling ThumbHash. The Backoffice preview rejects unprefixed or malformed native values instead of guessing which algorithm produced them.
 
 ### Package restore fails
 

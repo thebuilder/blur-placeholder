@@ -12,13 +12,10 @@ public sealed class BlurPlaceholderOptions
     /// <summary>Gets or sets whether native hashes are decoded to WebP data URLs before storage.</summary>
     public bool DecodeToDataUrl { get; set; } = true;
 
-    /// <summary>Gets or sets whether native hash values include their algorithm prefix.</summary>
-    public bool IncludeAlgorithmPrefix { get; set; } = true;
-
     /// <summary>Gets or sets whether existing images are processed when output settings change.</summary>
     public bool BackfillExisting { get; set; } = true;
 
-    /// <summary>Gets or sets the targeted retry-job interval.</summary>
+    /// <summary>Gets or sets the missing-placeholder maintenance interval.</summary>
     public TimeSpan RetryInterval { get; set; } = TimeSpan.FromHours(12);
 
     /// <summary>Gets the direct WebP settings.</summary>

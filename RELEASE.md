@@ -22,19 +22,21 @@ The trusted publishing policy must be active before the first release. It exchan
 Before creating a release:
 
 1. Confirm all CI jobs pass for the commit to publish, including Umbraco 17.1, latest 17.x, and latest 18.x.
-2. Review `CHANGELOG.md` and ensure the release notes describe the package version being published.
-3. Run `dotnet list src/TheBuilder.BlurPlaceholder/TheBuilder.BlurPlaceholder.csproj package --vulnerable --include-transitive` and resolve any runtime high or critical findings.
-4. Review `pnpm audit --prod`. The current `image-size` advisories are limited to Blume's documentation build dependency, have no patched release, and are not included in the NuGet package or backoffice runtime. Re-evaluate that exception for every release.
-5. Inspect the package produced by CI before approving the `nuget` environment deployment.
+2. Run `dotnet list src/TheBuilder.BlurPlaceholder/TheBuilder.BlurPlaceholder.csproj package --vulnerable --include-transitive` and resolve any runtime high or critical findings.
+3. Review `pnpm audit --prod`. The current `image-size` advisories are limited to Blume's documentation build dependency, have no patched release, and are not included in the NuGet package or backoffice runtime. Re-evaluate that exception for every release.
+4. Inspect the package produced by CI before approving the `nuget` environment deployment.
+
+GitHub Releases are the package changelog. Release notes are written on the GitHub Release and are not duplicated in the repository.
 
 ## Publish a prerelease
 
 1. Create a GitHub Release from the commit to publish.
 2. Give it a unique prerelease tag such as `v0.1.0-preview.1`.
 3. Select **Set as a pre-release**.
-4. Publish the release.
+4. Add the release notes.
+5. Publish the release.
 
-The workflow validates that the tag is SemVer, rebuilds the backoffice assets, runs the test suite, packs `TheBuilder.BlurPlaceholder`, uploads the `.nupkg` as a workflow artifact, and publishes it to nuget.org after any configured environment approval.
+The workflow validates that the tag is SemVer, applies it to both the NuGet package and the generated Umbraco package manifest, links the NuGet release notes to the matching GitHub Release, rebuilds the backoffice assets, runs the test suite, packs `TheBuilder.BlurPlaceholder`, uploads the `.nupkg` as a workflow artifact, and publishes it to nuget.org after any configured environment approval.
 
 NuGet package versions are immutable. Increment the prerelease number for every publish, even when a previous prerelease is unlisted.
 
@@ -43,7 +45,8 @@ NuGet package versions are immutable. Increment the prerelease number for every 
 1. Create a GitHub Release from the commit to publish.
 2. Use a new stable SemVer tag such as `v0.1.0`.
 3. Ensure **Set as a pre-release** is not selected.
-4. Publish the release.
+4. Add the release notes.
+5. Publish the release.
 
 The GitHub Release type and version must agree: prereleases require a prerelease version, and stable releases require a stable version.
 
@@ -54,4 +57,4 @@ NuGet packages cannot be overwritten or deleted. If a release is faulty:
 1. Unlist the affected version on nuget.org.
 2. Fix the issue on `main` and let CI complete.
 3. Publish a new version; never reuse the affected version number.
-4. Document the replacement version in the GitHub Release and `CHANGELOG.md`.
+4. Document the replacement version in the affected GitHub Release.

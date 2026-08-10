@@ -20,13 +20,14 @@
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Initial Umbraco CMS 17 package release.</PackageReleaseNotes>
+    <PackageReleaseNotes>See https://github.com/thebuilder/blur-placeholder/releases for release notes.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <BackofficeClientDirectory>$(MSBuildProjectDirectory)/Client</BackofficeClientDirectory>
     <BackofficeAssetsPattern>wwwroot/App_Plugins/TheBuilderBlurPlaceholder/**/*</BackofficeAssetsPattern>
     <BackofficeAssetsDirectory>$(MSBuildProjectDirectory)/wwwroot/App_Plugins/TheBuilderBlurPlaceholder</BackofficeAssetsDirectory>
     <BackofficeManifest>$(BackofficeAssetsDirectory)/umbraco-package.json</BackofficeManifest>
     <BackofficeEntryPoint>$(BackofficeAssetsDirectory)/the-builder-blur-placeholder.js</BackofficeEntryPoint>
+    <BackofficeBuildStamp>$(MSBuildProjectDirectory)/obj/backoffice-$(Version).stamp</BackofficeBuildStamp>
   </PropertyGroup>
 
 
@@ -51,7 +52,7 @@
     <Content Remove="Client\**" />
 
     <!-- However make the Umbraco-package.json included for dotnet pack or nuget package and visible to the solution -->
-    <None Include="Client\public\umbraco-package.json" Pack="false" />
+    <None Include="Client\umbraco-package.json" Pack="false" />
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
     <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
@@ -61,11 +62,22 @@
   <ItemGroup>
     <Content Remove="wwwroot/App_Plugins/TheBuilderBlurPlaceholder/**/*" />
     <Folder Include="wwwroot\" />
+    <BackofficeBuildInput Include="$(BackofficeClientDirectory)/src/**/*" />
+    <BackofficeBuildInput Include="$(BackofficeClientDirectory)/package.json" />
+    <BackofficeBuildInput Include="$(BackofficeClientDirectory)/tsconfig.json" />
+    <BackofficeBuildInput Include="$(BackofficeClientDirectory)/vite.config.ts" />
+    <BackofficeBuildInput Include="$(BackofficeClientDirectory)/umbraco-package.json" />
+    <BackofficeBuildInput Include="$(MSBuildProjectDirectory)/../../pnpm-lock.yaml" />
   </ItemGroup>
 
   <Target Name="BuildBackofficeAssetsForPack"
-          Condition="'$(_IsPacking)' == 'true' and '$(NoBuild)' != 'true'">
-    <Exec Command="corepack pnpm build" WorkingDirectory="$(BackofficeClientDirectory)" />
+          Condition="'$(_IsPacking)' == 'true' and '$(NoBuild)' != 'true'"
+          Inputs="@(BackofficeBuildInput)"
+          Outputs="$(BackofficeManifest);$(BackofficeEntryPoint);$(BackofficeBuildStamp)">
+    <Exec Command="corepack pnpm build"
+          WorkingDirectory="$(BackofficeClientDirectory)"
+          EnvironmentVariables="PACKAGE_VERSION=$(Version)" />
+    <Touch Files="$(BackofficeBuildStamp)" AlwaysCreate="true" />
   </Target>
 
   <Target Name="RefreshBackofficeStaticWebAssets"

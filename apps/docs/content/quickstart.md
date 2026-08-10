@@ -23,7 +23,6 @@ Add the section below to `appsettings.json`, then restart the application. The f
     "Enabled": true,
     "Algorithm": "Webp",
     "DecodeToDataUrl": true,
-    "IncludeAlgorithmPrefix": true,
     "BackfillExisting": true,
     "RetryInterval": "12:00:00",
     "Webp": { "MaximumDimension": 16, "Quality": 60 },
@@ -47,9 +46,8 @@ Upload or replace an Image media item. The read-only `blurPlaceholder` field sho
 | `Enabled` | `true` | Enables save-time generation and maintenance. Disabling it preserves existing values. |
 | `Algorithm` | `Webp` | Selects `Webp`, `BlurHash`, or `ThumbHash`. |
 | `DecodeToDataUrl` | `true` | Converts native hashes to browser-ready WebP data URLs. WebP output is always a data URL. |
-| `IncludeAlgorithmPrefix` | `true` | Prefixes native values with `blurhash:` or `thumbhash:`. Disable only when the consuming application already knows the configured algorithm. |
 | `BackfillExisting` | `true` | Runs one existing-image pass for each output-settings fingerprint. |
-| `RetryInterval` | `12:00:00` | Controls targeted transient-failure retries; minimum one minute. |
+| `RetryInterval` | `12:00:00` | Controls maintenance scans for missing placeholders and transient-failure retries; minimum one minute. |
 | `Webp.MaximumDimension` | `16` | Longest edge of direct WebP output; valid range 16–64. |
 | `Webp.Quality` | `60` | Direct lossy WebP quality; valid range 1–100. |
 | `BlurHash.MaximumDimension` | `32` | Longest input edge passed to BlurHash; valid range 16–100. |

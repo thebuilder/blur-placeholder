@@ -26,8 +26,7 @@ public sealed class BlurPlaceholderComposer : IComposer
             .ValidateOnStart();
 
         builder.Services.AddSingleton<IPlaceholderGenerator, PlaceholderGenerator>();
-        builder.Services.AddSingleton<MediaPlaceholderProcessor>();
-        builder.Services.AddSingleton<IBlurPlaceholderRetryQueue, BlurPlaceholderRetryQueue>();
+        builder.Services.AddSingleton<IMediaPlaceholderProcessor, MediaPlaceholderProcessor>();
         builder.Services.AddSingleton<IDistributedBackgroundJob, BlurPlaceholderMaintenanceJob>();
         builder.AddNotificationAsyncHandler<MediaSavingNotification, BlurPlaceholderMediaSavingHandler>();
 

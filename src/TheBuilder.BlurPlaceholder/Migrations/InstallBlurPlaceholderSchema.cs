@@ -20,7 +20,6 @@ internal sealed class InstallBlurPlaceholderSchema : AsyncPackageMigrationBase
     private readonly PropertyEditorCollection _propertyEditors;
     private readonly IConfigurationEditorJsonSerializer _configurationSerializer;
     private readonly IShortStringHelper _shortStringHelper;
-    private readonly IKeyValueService _keyValueService;
 
     public InstallBlurPlaceholderSchema(
         IPackagingService packagingService,
@@ -33,7 +32,6 @@ internal sealed class InstallBlurPlaceholderSchema : AsyncPackageMigrationBase
         IOptions<PackageMigrationSettings> packageMigrationsSettings,
         IDataTypeService dataTypeService,
         IMediaTypeService mediaTypeService,
-        IKeyValueService keyValueService,
         PropertyEditorCollection propertyEditors,
         IConfigurationEditorJsonSerializer configurationSerializer)
         : base(
@@ -48,7 +46,6 @@ internal sealed class InstallBlurPlaceholderSchema : AsyncPackageMigrationBase
     {
         _dataTypeService = dataTypeService;
         _mediaTypeService = mediaTypeService;
-        _keyValueService = keyValueService;
         _propertyEditors = propertyEditors;
         _configurationSerializer = configurationSerializer;
         _shortStringHelper = shortStringHelper;
@@ -82,9 +79,6 @@ internal sealed class InstallBlurPlaceholderSchema : AsyncPackageMigrationBase
             imageMediaType.AddPropertyType(property);
             await _mediaTypeService.UpdateAsync(imageMediaType, MigrationUserKey);
         }
-
-        if (_keyValueService.GetValue(Constants.RetryQueueKey) is null)
-            _keyValueService.SetValue(Constants.RetryQueueKey, "[]");
     }
 
     private IDataType CreateDataType()

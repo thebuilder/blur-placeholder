@@ -63,7 +63,7 @@ internal sealed class PlaceholderGenerator(IOptions<BlurPlaceholderOptions> opti
         using var image = await ImageRasterizer.LoadAsync(source, _options.BlurHash.MaximumDimension, cancellationToken);
         var hash = Blurhasher.Encode(image, _options.BlurHash.ComponentsX, _options.BlurHash.ComponentsY);
         if (!_options.DecodeToDataUrl)
-            return PlaceholderGenerationResult.Generated(PrefixNativeValue(Constants.BlurHashPrefix, hash));
+            return PlaceholderGenerationResult.Generated(Constants.BlurHashPrefix + hash);
 
         var decodedSize = GetBlurHashDecodedSize(image.Width, image.Height);
         using var decoded = Blurhasher.Decode(hash, decodedSize.Width, decodedSize.Height, 1);
@@ -77,7 +77,7 @@ internal sealed class PlaceholderGenerator(IOptions<BlurPlaceholderOptions> opti
         var rgba = new byte[image.Width * image.Height * 4];
         image.CopyPixelDataTo(rgba);
         var hash = ThumbHashConvert.FromRgba(image.Width, image.Height, rgba);
-        var nativeValue = PrefixNativeValue(Constants.ThumbHashPrefix, Convert.ToBase64String(hash.ToArray()));
+        var nativeValue = Constants.ThumbHashPrefix + Convert.ToBase64String(hash.ToArray());
         if (!_options.DecodeToDataUrl) return PlaceholderGenerationResult.Generated(nativeValue);
 
         var decoded = ThumbHashConvert.ToRgba(hash);
@@ -96,7 +96,4 @@ internal sealed class PlaceholderGenerator(IOptions<BlurPlaceholderOptions> opti
             ? new Size(maximumDimension, Math.Max(1, (int)Math.Round(maximumDimension * height / (double)width)))
             : new Size(Math.Max(1, (int)Math.Round(maximumDimension * width / (double)height)), maximumDimension);
     }
-
-    private string PrefixNativeValue(string prefix, string value) =>
-        _options.IncludeAlgorithmPrefix ? prefix + value : value;
 }
