@@ -2,10 +2,12 @@
 // @ts-nocheck — Blume's React island types flag valid Astro attributes.
 import PageLayout from "blume/components/layout/PageLayout.astro";
 import data from "blume:data";
+import { EcosystemSection, LandingRoot } from "@thebuilder/umbraco-docs/astro";
 
 import "./_home/home.css";
 
 import backofficeShot from "../content/screenshots/blur-placeholder-media.png";
+import { blurPlaceholderPackage, ecosystemPackages } from "../umbraco-package";
 
 const { config } = data;
 
@@ -74,7 +76,7 @@ const features = [
     route: "/",
   }}
 >
-  <div class="home" data-home>
+  <LandingRoot class="home">
     <section class="hero">
       <div class="hero__glow" aria-hidden="true"></div>
       <div class="shell hero__inner">
@@ -218,7 +220,12 @@ const features = [
         <a class="button button--secondary" href={marketplaceUrl} rel="noopener">Umbraco Marketplace</a>
       </div>
     </section>
-  </div>
+
+    <EcosystemSection
+      packages={ecosystemPackages}
+      currentPackageId={blurPlaceholderPackage.id}
+    />
+  </LandingRoot>
 
   <footer class="home-footer" slot="footer">
     <div class="shell home-footer__inner">
@@ -237,7 +244,7 @@ const features = [
 </PageLayout>
 
 <script>
-  const root = document.querySelector<HTMLElement>("[data-home]");
+  const root = document.querySelector<HTMLElement>("[data-udocs-root]");
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   if (root && !prefersReduced && "IntersectionObserver" in window) {

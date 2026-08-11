@@ -15,3 +15,21 @@ export const blurPlaceholderPackage = defineUmbracoPackage({
   status: "stable",
   categories: ["Developer Tools", "Media"],
 });
+
+export const webAnalyticsPackage = defineUmbracoPackage({
+  id: "thebuilder.webanalytics",
+  name: "Web Analytics",
+  summary: "Connect analytics providers and bring site-wide and page-level insights into the Umbraco backoffice.",
+  links: {
+    docs: "https://umbraco-web-analytics.vercel.app/",
+    nuget: "https://www.nuget.org/packages/TheBuilder.WebAnalytics",
+    marketplace: "https://marketplace.umbraco.com/package/thebuilder.webanalytics",
+    github: "https://github.com/thebuilder/web-analytics",
+  },
+  logo: "/web-analytics-logo.png",
+  compatibility: { umbraco: ">=17.1 <19", dotnet: ">=10" },
+  status: "stable",
+  categories: ["Analytics", "Editor Tools"],
+});
+
+export const ecosystemPackages = [blurPlaceholderPackage, webAnalyticsPackage];
