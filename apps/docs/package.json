@@ -5,14 +5,14 @@
   "scripts": {
     "dev": "blume dev",
     "build": "pnpm run generate:og && blume build",
-    "generate:og": "node scripts/generate-og-image.mjs"
+    "generate:og": "umbraco-docs-og",
+    "check:og": "umbraco-docs-og --check"
   },
   "dependencies": {
-    "blume": "^1.4.2"
+    "@thebuilder/umbraco-docs": "^1.0.2",
+    "blume": "^1.4.3"
   },
   "devDependencies": {
-    "@types/node": "^26.2.0",
-    "gray-matter": "4.0.3",
-    "sharp": "^0.35.3"
+    "@types/node": "^26.2.0"
   }
 }
