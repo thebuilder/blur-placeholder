@@ -1,8 +1,9 @@
 import { defineConfig } from "blume";
+import { blurPlaceholderPackage } from "./umbraco-package";
 
 export default defineConfig({
-  title: "Blur Placeholder",
-  description: "Compact image placeholders for Umbraco.",
+  title: blurPlaceholderPackage.name,
+  description: blurPlaceholderPackage.summary,
   logo: {
     image: "/logo-mark.svg",
     text: "Blur Placeholder",
