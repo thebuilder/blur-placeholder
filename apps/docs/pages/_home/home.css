@@ -8,7 +8,6 @@
 .home {
   --brand-gradient: linear-gradient(105deg, #60a5fa, #a78bfa 52%, #f472b6);
   overflow: clip;
-  padding-bottom: 5rem;
 }
 
 .home :is(h1, h2, h3) {
@@ -301,6 +300,10 @@
 .closing__glow { position: absolute; inset: 0; background: radial-gradient(45% 100% at 12% 0%, color-mix(in oklab, #60a5fa 15%, transparent), transparent 70%), radial-gradient(45% 100% at 88% 0%, color-mix(in oklab, #ed63ad 12%, transparent), transparent 70%); pointer-events: none; }
 .closing :is(h2, p, .hero__actions) { position: relative; }
 .closing > p { max-width: 38rem; margin: 0 auto 1.75rem; }
+
+/* Avoid stacking the shared section's bottom margin with this custom page's
+   footer spacing. The component's presentation remains package-owned. */
+.home .udocs-ecosystem { margin-block: clamp(4rem, 9vw, 7rem) 0; }
 
 .home-footer { margin-top: clamp(4rem, 9vw, 7rem); border-top: 1px solid var(--blume-border); padding-block: 2.5rem; }
 .home-footer__inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; }
