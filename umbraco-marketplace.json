@@ -11,7 +11,7 @@
   "AlternateCategory": "Headless",
   "Title": "Blur Placeholder",
   "Description": "Generate WebP, BlurHash, or ThumbHash placeholders for Umbraco Image media and deliver them as one frontend-ready string.",
-  "DocumentationUrl": "https://blur-placeholder.vercel.app/",
+  "DocumentationUrl": "https://blur-placeholder.thebuilder.dk/",
   "IssueTrackerUrl": "https://github.com/thebuilder/blur-placeholder/issues",
   "LicenseTypes": [
     "Free"
