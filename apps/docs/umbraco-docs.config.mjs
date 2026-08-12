@@ -7,6 +7,7 @@ export default defineOgConfig({
   prefix: "/og",
   brand: "TheBuilder · Blur Placeholder",
   accent: "#2563eb",
+  logo: "/logo-mark.svg",
   root: {
     title: "Blur Placeholder",
     description: "Compact image placeholders for Umbraco.",
