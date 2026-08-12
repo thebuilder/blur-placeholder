@@ -21,7 +21,7 @@ export default defineConfig({
   },
   deployment: {
     output: "static",
-    site: "https://blur-placeholder.vercel.app"
+    site: "https://blur.thebuilder.dk"
   },
   seo: {
     og: { enabled: false }

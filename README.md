@@ -159,10 +159,10 @@ With the default configuration, `blurPlaceholder` is ready to pass to an image c
 
 ## Documentation
 
-- [Overview](https://blur-placeholder.vercel.app/overview): compare the output formats and their payloads.
-- [Quickstart](https://blur-placeholder.vercel.app/quickstart): install, configure, and verify the package.
-- [Delivery API](https://blur-placeholder.vercel.app/delivery-api): request and consume the property, including native-hash decoding.
-- [Operations](https://blur-placeholder.vercel.app/operations): backfills, retries, logging, and health checks.
-- [License and attribution](https://blur-placeholder.vercel.app/license): package licensing and bundled third-party implementation notices.
+- [Overview](https://blur.thebuilder.dk/overview): compare the output formats and their payloads.
+- [Quickstart](https://blur.thebuilder.dk/quickstart): install, configure, and verify the package.
+- [Delivery API](https://blur.thebuilder.dk/delivery-api): request and consume the property, including native-hash decoding.
+- [Operations](https://blur.thebuilder.dk/operations): backfills, retries, logging, and health checks.
+- [License and attribution](https://blur.thebuilder.dk/license): package licensing and bundled third-party implementation notices.
 
 The runnable sample host is available in [`samples/TheBuilder.BlurPlaceholder.Example`](https://github.com/thebuilder/blur-placeholder/tree/main/samples/TheBuilder.BlurPlaceholder.Example).
