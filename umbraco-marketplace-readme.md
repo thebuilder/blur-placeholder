@@ -28,6 +28,6 @@ Request `blurPlaceholder` explicitly to keep the extra media payload opt-in:
 GET /umbraco/delivery/api/v2/media/item/{mediaId}?expand=properties[$all]&fields=properties[blurPlaceholder]
 ```
 
-With the default configuration, the returned value can be used directly as a blur data URL. See the [Delivery API guide](https://blur-placeholder.thebuilder.dk/delivery-api) for Next.js, Nuxt, BlurHash, and ThumbHash examples.
+With the default configuration, the returned value can be used directly as a blur data URL. See the [Delivery API guide](https://blur.thebuilder.dk/delivery-api) for Next.js, Nuxt, BlurHash, and ThumbHash examples.
 
-[Read the documentation](https://blur-placeholder.thebuilder.dk/) · [View on GitHub](https://github.com/thebuilder/blur-placeholder) · [Install from NuGet](https://www.nuget.org/packages/TheBuilder.BlurPlaceholder)
+[Read the documentation](https://blur.thebuilder.dk/) · [View on GitHub](https://github.com/thebuilder/blur-placeholder) · [Install from NuGet](https://www.nuget.org/packages/TheBuilder.BlurPlaceholder)

@@ -21,7 +21,7 @@ export default defineConfig({
   },
   deployment: {
     output: "static",
-    site: "https://blur-placeholder.thebuilder.dk"
+    site: "https://blur.thebuilder.dk"
   },
   seo: {
     og: { enabled: false }
