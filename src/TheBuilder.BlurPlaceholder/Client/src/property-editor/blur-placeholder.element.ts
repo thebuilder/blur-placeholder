@@ -81,8 +81,8 @@ export class TheBuilderBlurPlaceholderPropertyEditorElement extends UmbLitElemen
     }
   }
 
-  private _toggleBlur(event: Event) {
-    this._blurred = (event.currentTarget as HTMLElement & { checked: boolean }).checked;
+  private _toggleBlur() {
+    this._blurred = !this._blurred;
   }
 
   override render() {
@@ -92,7 +92,16 @@ export class TheBuilderBlurPlaceholderPropertyEditorElement extends UmbLitElemen
     const aspectRatio = ready ? `${ready.width} / ${ready.height}` : "4 / 3";
     return html`
       <div class="editor">
-        <div class="preview" style="aspect-ratio: ${aspectRatio}">
+        <button
+          class="preview"
+          type="button"
+          style="aspect-ratio: ${aspectRatio}"
+          aria-label=${this._blurred ? "Show preview without CSS blur" : "Show preview with CSS blur"}
+          aria-pressed=${this._blurred}
+          title=${ready ? "Toggle CSS blur preview" : nothing}
+          ?disabled=${!ready}
+          @click=${this._toggleBlur}
+        >
           ${ready
             ? html`<img
                 class=${this._blurred ? "blurred" : nothing}
@@ -104,44 +113,51 @@ export class TheBuilderBlurPlaceholderPropertyEditorElement extends UmbLitElemen
                   ? html`<em>Blur placeholder will be generated when the image is saved.</em>`
                   : state.status === "pending" ? "Decoding preview…" : "No preview"}
               </div>`}
-        </div>
-        <div class="details">
-          <div class="metadata">
-            <span>${ready?.label ?? (state.status === "invalid" ? "Malformed value" : state.status === "pending" ? "Loading" : "Empty")}</span>
-            ${ready ? html`<span>${ready.width} × ${ready.height}</span>` : nothing}
-            <span>${value.length} characters</span>
-          </div>
-          <code title="${value}">${truncate(value)}</code>
-          <div class="actions">
-            <uui-button look="secondary" label="Copy placeholder" @click=${this._copyValue} ?disabled=${!value}>
-              ${this._copied ? "Copied" : "Copy"}
-            </uui-button>
-            <uui-toggle
-              label="Blur preview"
-              .checked=${this._blurred}
-              ?disabled=${!ready}
-              @change=${this._toggleBlur}
-            ></uui-toggle>
-          </div>
-          ${state.status === "invalid" ? html`<p class="error" role="alert">${state.error}</p>` : nothing}
-          ${this._copyError ? html`<p class="error" role="alert">${this._copyError}</p>` : nothing}
-        </div>
+        </button>
+        ${state.status !== "empty"
+          ? html`<div class="details">
+              <div class="metadata">
+                <span>${ready?.label ?? (state.status === "invalid" ? "Malformed value" : "Loading")}</span>
+                ${ready ? html`<span>${ready.width} × ${ready.height}</span>` : nothing}
+                <span>${value.length} characters</span>
+              </div>
+              <div class="value">
+                <code title="${value}">${truncate(value)}</code>
+                <button
+                  class="copy"
+                  type="button"
+                  aria-label=${this._copied ? "Placeholder copied" : "Copy placeholder"}
+                  title=${this._copied ? "Copied" : "Copy placeholder"}
+                  @click=${this._copyValue}
+                >
+                  <uui-icon name=${this._copied ? "icon-check" : "icon-documents"}></uui-icon>
+                </button>
+              </div>
+              ${state.status === "invalid" ? html`<p class="error" role="alert">${state.error}</p>` : nothing}
+              ${this._copyError ? html`<p class="error" role="alert">${this._copyError}</p>` : nothing}
+            </div>`
+          : nothing}
       </div>
     `;
   }
 
   static override styles = css`
       :host { display: block; }
-      .editor { display: grid; grid-template-columns: minmax(9rem, 14rem) 1fr; gap: var(--uui-size-space-4); }
-      .preview { align-self: start; overflow: hidden; border-radius: var(--uui-border-radius); background: var(--uui-color-surface-alt); }
+      .editor { display: grid; grid-template-columns: minmax(9rem, 14rem) minmax(0, 40rem); gap: var(--uui-size-space-6); }
+      .preview { display: block; align-self: start; overflow: hidden; width: 100%; padding: 0; border: 0; border-radius: var(--uui-border-radius); background: var(--uui-color-surface-alt); color: inherit; }
+      .preview:not(:disabled) { cursor: pointer; }
+      .preview:focus-visible, .copy:focus-visible { outline: 2px solid var(--uui-color-focus); outline-offset: 2px; }
       img { display: block; width: 100%; height: 100%; object-fit: cover; }
       img.blurred { filter: blur(18px); transform: scale(1.12); }
-      .empty { display: grid; place-items: center; height: 100%; padding: var(--uui-size-space-4); color: var(--uui-color-text-alt); text-align: center; }
+      .empty { box-sizing: border-box; display: grid; place-items: center; width: 100%; height: 100%; padding: var(--uui-size-space-4); color: var(--uui-color-text-alt); text-align: center; }
       .empty em { font-size: var(--uui-type-small-size); }
       .details { display: grid; align-content: start; gap: var(--uui-size-space-3); min-width: 0; }
       .metadata { display: flex; flex-wrap: wrap; gap: var(--uui-size-space-3); color: var(--uui-color-text-alt); font-size: var(--uui-type-small-size); }
-      code { display: block; overflow: hidden; color: var(--uui-color-text); text-overflow: ellipsis; white-space: nowrap; }
-      .actions { display: grid; justify-items: start; gap: var(--uui-size-space-3); }
+      .value { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; overflow: hidden; border: 1px solid var(--uui-color-border); border-radius: var(--uui-border-radius); background: var(--uui-color-surface-alt); }
+      code { display: block; overflow: hidden; padding: var(--uui-size-space-3) var(--uui-size-space-4); color: var(--uui-color-text); text-overflow: ellipsis; white-space: nowrap; }
+      .copy { display: grid; place-items: center; min-width: var(--uui-size-11); padding: 0 var(--uui-size-space-3); border: 0; border-inline-start: 1px solid var(--uui-color-border); background: transparent; color: var(--uui-color-interactive); cursor: pointer; }
+      .copy:hover:not(:disabled) { background: var(--uui-color-surface-emphasis); }
+      .copy:disabled { color: var(--uui-color-disabled-contrast); cursor: default; }
       .error { margin: 0; color: var(--uui-color-danger); }
       @media (max-width: 42rem) { .editor { grid-template-columns: 1fr; } }
   `;

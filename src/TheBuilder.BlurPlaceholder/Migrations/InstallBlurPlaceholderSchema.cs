@@ -72,7 +72,7 @@ internal sealed class InstallBlurPlaceholderSchema : AsyncPackageMigrationBase
             var property = new PropertyType(_shortStringHelper, dataType, Constants.PropertyAlias)
             {
                 Name = "Blur placeholder",
-                Description = "Generated WebP, BlurHash, or ThumbHash preview value.",
+                Description = "Generated placeholder preview value.",
                 SortOrder = imageMediaType.PropertyTypes.Count(),
                 Mandatory = false,
             };
