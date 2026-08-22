@@ -38,7 +38,7 @@ jobs:
         run: pnpm build
 
       - name: Verify production decoders
-        run: pnpm --filter @thebuilder/blur-placeholder-client test:decoders
+        run: pnpm client:test
 
   dotnet:
     name: .NET (Umbraco ${{ matrix.umbraco-version }})

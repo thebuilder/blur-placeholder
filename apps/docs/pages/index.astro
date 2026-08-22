@@ -1,5 +1,5 @@
 ---
-// @ts-nocheck — Blume's React island types flag valid Astro attributes.
+// @ts-nocheck - Blume's React island types flag valid Astro attributes.
 import PageLayout from "blume/components/layout/PageLayout.astro";
 import data from "blume:data";
 import { EcosystemSection, LandingRoot } from "@thebuilder/umbraco-docs/astro";
@@ -18,8 +18,10 @@ const repoUrl = "https://github.com/thebuilder/blur-placeholder";
 const installCommand = "dotnet add package TheBuilder.BlurPlaceholder";
 const deliveryResponse = `{
   "name": "Alpine lake",
-  "url": "/media/alpine-lake.jpg",
-  "blurPlaceholder": "data:image/webp;base64,UklGR..."
+  "url": "/media/n1hbay0t/alpine-lake.jpg",
+  "properties": {
+    "blurPlaceholder": "data:image/webp;base64,UklGR..."
+  }
 }`;
 
 const formats = [
@@ -119,7 +121,7 @@ const features = [
             </svg>
           </button>
         </div>
-        <p class="hero__compat reveal" style="--i: 5">For Umbraco CMS 17.1 and later</p>
+        <p class="hero__compat reveal" style="--i: 5">For Umbraco CMS 17.1 through 18.x</p>
       </div>
       <div class="shell">
         <figure class="screenshot screenshot--hero reveal" style="--i: 5">
@@ -143,9 +145,9 @@ const features = [
     <section class="shell showcase" aria-labelledby="showcase-title">
       <div class="section-heading reveal">
         <span class="rule" aria-hidden="true"></span>
-        <h2 id="showcase-title">One field, three representations</h2>
+        <h2 id="showcase-title">One property, three representations</h2>
         <p>
-          Choose the smallest frontend contract that fits your stack. The default
+          Pick the smallest value your frontend can work with. The default
           WebP works anywhere an image URL works.
         </p>
       </div>
@@ -172,7 +174,7 @@ const features = [
         <span class="rule" aria-hidden="true"></span>
         <h2 id="feature-title">Built around the media lifecycle</h2>
         <p>
-          Placeholder generation belongs next to the source image—not in every
+          Placeholder generation belongs next to the source image, not in every
           frontend that consumes it.
         </p>
       </div>
@@ -190,7 +192,7 @@ const features = [
     <section class="shell backoffice">
       <div class="backoffice__copy reveal">
         <span class="rule" aria-hidden="true"></span>
-        <h2>One frontend-ready field</h2>
+        <h2>One frontend-ready property</h2>
         <p>
           Request <code>blurPlaceholder</code> explicitly through the Delivery API.
           The default WebP value can go straight into an image component, while

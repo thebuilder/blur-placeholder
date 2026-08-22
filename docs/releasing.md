@@ -1,6 +1,6 @@
 # Releasing the NuGet package
 
-Package versions are release-driven. The `0.1.0` version in the project file is the local-development fallback; the publish workflow supplies the package version from the GitHub Release tag.
+GitHub Releases are the authoritative changelog and the release tag is the single source of package versions. The `0.1.0` version in the project file is a local-build fallback only.
 
 ## One-time setup
 
@@ -15,18 +15,16 @@ Package versions are release-driven. The `0.1.0` version in the project file is 
    - Workflow: `publish-nuget.yml`
    - Environment: `nuget`
 
-The trusted publishing policy must be active before the first release. It exchanges GitHub's short-lived OIDC token for a temporary NuGet API key; no long-lived NuGet API key is stored in GitHub.
+The trusted publishing policy must be active before the first release. It exchanges GitHub's short-lived OIDC token for a temporary NuGet API key, so no long-lived NuGet API key is stored in GitHub.
 
 ## Pre-release verification
 
 Before creating a release:
 
-1. Confirm all CI jobs pass for the commit to publish, including Umbraco 17.1, latest 17.x, and latest 18.x.
+1. Confirm all CI jobs pass for the commit to publish, including Umbraco 17.1, the latest 17.x, and the latest 18.x.
 2. Run `dotnet list src/TheBuilder.BlurPlaceholder/TheBuilder.BlurPlaceholder.csproj package --vulnerable --include-transitive` and resolve any runtime high or critical findings.
-3. Review `pnpm audit --prod`. The current `image-size` advisories are limited to Blume's documentation build dependency, have no patched release, and are not included in the NuGet package or backoffice runtime. Re-evaluate that exception for every release.
+3. Review `pnpm audit --prod`. The current `image-size` advisories affect only Blume's documentation build dependency, have no patched release, and reach neither the NuGet package nor the backoffice runtime. Re-evaluate that exception for every release.
 4. Inspect the package produced by CI before approving the `nuget` environment deployment.
-
-GitHub Releases are the package changelog. Release notes are written on the GitHub Release and are not duplicated in the repository.
 
 ## Publish a prerelease
 
@@ -56,5 +54,5 @@ NuGet packages cannot be overwritten or deleted. If a release is faulty:
 
 1. Unlist the affected version on nuget.org.
 2. Fix the issue on `main` and let CI complete.
-3. Publish a new version; never reuse the affected version number.
+3. Publish a new version. Never reuse the affected version number.
 4. Document the replacement version in the affected GitHub Release.

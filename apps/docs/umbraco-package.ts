@@ -26,7 +26,7 @@ export const webAnalyticsPackage = defineUmbracoPackage({
     marketplace: "https://marketplace.umbraco.com/package/thebuilder.webanalytics",
     github: "https://github.com/thebuilder/web-analytics",
   },
-  logo: "/web-analytics-logo.png",
+  logo: "/ecosystem/web-analytics.png",
   compatibility: { umbraco: ">=17.1 <19", dotnet: ">=10" },
   status: "stable",
   categories: ["Analytics", "Editor Tools"],

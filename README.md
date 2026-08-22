@@ -14,41 +14,49 @@
 [![Umbraco Marketplace](https://img.shields.io/badge/Umbraco-Marketplace-3544b1)](https://marketplace.umbraco.com/package/thebuilder.blurplaceholder)
 [![License](https://img.shields.io/github/license/thebuilder/blur-placeholder)](https://github.com/thebuilder/blur-placeholder/blob/main/LICENSE)
 
-Blur Placeholder is an Umbraco CMS 17 package that adds a generated, read-only `blurPlaceholder` property to the default Image media type. The value is generated when the image is saved and stored with the media item, so frontend requests do no image processing.
+Blur Placeholder adds a generated, read-only `blurPlaceholder` property to Umbraco's default Image media type. The value is generated when the image is saved and stored with the media item, so a public request never triggers image processing.
 
 ![Preview and copy a generated placeholder from an Image media item](https://raw.githubusercontent.com/thebuilder/blur-placeholder/refs/heads/main/apps/docs/content/screenshots/blur-placeholder-media.png)
 
-## Why Blur Placeholder?
+## What it does
 
-- **Generate once:** placeholder work happens when media changes, not during public requests.
-- **Choose the right representation:** use browser-ready tiny WebP by default, or opt into native BlurHash or ThumbHash.
-- **Keep the frontend contract small:** request one self-describing string through the Delivery API.
-- **Handle existing libraries:** fingerprinted background processing backfills images and resumes interrupted work.
-- **See what was generated:** the read-only backoffice property previews the result and reports its representation and size.
+- **Generates on save.** Placeholder work happens when the media item changes, never during a public request.
+- **Stores one string.** Every result is a self-describing `blurPlaceholder` value, never a JSON envelope.
+- **Backfills existing media.** A fingerprinted background pass processes the images already in the library and resumes if it is interrupted.
+- **Shows its work.** The read-only backoffice property previews the result and reports its representation and stored size.
 
 ## Output formats
 
 | Algorithm | Stored value | Best when |
 | --- | --- | --- |
 | **WebP** | Browser-ready `data:image/webp;base64,…` | You want the simplest frontend integration with no decoder. This is the default. |
-| **BlurHash** | Native `blurhash:…` string or a decoded WebP data URL | You want a compact, configurable hash and can decode it on the application server. |
-| **ThumbHash** | Base64-encoded `thumbhash:…` bytes or a decoded WebP data URL | Approximate aspect ratio, color, and transparency are useful. |
+| **BlurHash** | Native `blurhash:…` string, or a decoded WebP data URL | You want a compact, configurable hash and can decode it on the application server. |
+| **ThumbHash** | Base64-encoded `thumbhash:…` bytes, or a decoded WebP data URL | Aspect ratio, average color, and transparency matter. |
 
-The property always contains one self-describing string, never a JSON envelope. Native values use `blurhash:` or `thumbhash:` so consumers never have to guess which decoder to use.
+Native values carry a `blurhash:` or `thumbhash:` prefix, so a consumer never has to guess which decoder to use.
 
 ## Install
 
-Blur Placeholder supports Umbraco CMS 17.1 and later. Add it to the Umbraco web project:
+Blur Placeholder supports Umbraco CMS 17.1 through 18.x on .NET 10. Add it to the Umbraco web project:
 
 ```sh
 dotnet add package TheBuilder.BlurPlaceholder
 ```
 
-The package registers its services and backoffice extension automatically. On first startup it installs the string data type and adds `blurPlaceholder` to the default Image media type.
+Nothing else is required: the package generates placeholders from the media already in your library and calls no external service.
+
+The package registers its services and backoffice extension automatically. Then:
+
+1. Restart the Umbraco application. The first startup installs the string data type and adds `blurPlaceholder` to the default Image media type.
+2. Upload or replace an Image media item and save it.
+3. Check the read-only **Blur placeholder** property on that media item for the generated preview.
+4. Request `blurPlaceholder` through the Delivery API wherever your frontend needs it.
+
+With `BackfillExisting` left on, a background pass also processes the images already in the library.
 
 ## Configure
 
-Configuration is read from the `BlurPlaceholder` section in `appsettings.json`. All settings below show their defaults, so the section can be omitted when the default tiny WebP output is appropriate.
+Configuration comes from the `BlurPlaceholder` section in `appsettings.json`. Every value below is the default, so you can omit the section entirely when the default tiny WebP output is what you want.
 
 ```json
 {
@@ -85,22 +93,24 @@ Configuration is read from the `BlurPlaceholder` section in `appsettings.json`. 
 | `Algorithm` | `Webp` | Selects `Webp`, `BlurHash`, or `ThumbHash`. |
 | `DecodeToDataUrl` | `true` | Converts native hashes to browser-ready WebP data URLs before storage. WebP output is always a data URL. |
 | `BackfillExisting` | `true` | Processes existing images once for each output-settings fingerprint. |
-| `RetryInterval` | `12:00:00` | Controls maintenance scans for missing placeholders and transient-failure retries; minimum one minute. |
-| `Webp.MaximumDimension` | `16` | Longest edge of direct WebP output; valid range 16–64. |
-| `Webp.Quality` | `60` | Direct lossy WebP quality; valid range 1–100. |
-| `BlurHash.MaximumDimension` | `32` | Longest input edge passed to BlurHash; valid range 16–100. |
-| `BlurHash.ComponentsX` | `4` | Horizontal BlurHash detail; valid range 1–9. |
-| `BlurHash.ComponentsY` | `3` | Vertical BlurHash detail; valid range 1–9. |
-| `ThumbHash.MaximumDimension` | `100` | Longest input edge passed to ThumbHash; valid range 1–100. |
-| `DecodedDataUrl.WebpQuality` | `60` | WebP quality after decoding BlurHash or ThumbHash; valid range 1–100. |
+| `RetryInterval` | `12:00:00` | Sets how often maintenance scans for missing placeholders and retries transient failures. Minimum one minute. |
+| `Webp.MaximumDimension` | `16` | Longest edge of direct WebP output. Accepts 16 to 64. |
+| `Webp.Quality` | `60` | Direct lossy WebP quality. Accepts 1 to 100. |
+| `BlurHash.MaximumDimension` | `32` | Longest input edge passed to BlurHash. Accepts 16 to 100. |
+| `BlurHash.ComponentsX` | `4` | Horizontal BlurHash detail. Accepts 1 to 9. |
+| `BlurHash.ComponentsY` | `3` | Vertical BlurHash detail. Accepts 1 to 9. |
+| `ThumbHash.MaximumDimension` | `100` | Longest input edge passed to ThumbHash. Accepts 1 to 100. |
+| `DecodedDataUrl.WebpQuality` | `60` | WebP quality after decoding BlurHash or ThumbHash. Accepts 1 to 100. |
 
-Invalid values fail application startup with the relevant configuration key and accepted range. Settings that affect generated bytes participate in the backfill fingerprint, so an output change allows one new pass over existing images instead of creating a recurring media-library scan.
+An invalid value fails application startup and names the configuration key and its accepted range.
 
-## Verify the installation
+Settings that change the generated bytes feed the backfill fingerprint. Changing one permits a single new pass over existing images rather than starting a recurring media-library scan.
 
-Upload or replace an Image media item and save it. The read-only **Blur placeholder** property appears after the standard image fields and shows the generated preview, representation, dimensions, and stored string.
+## What you see in the backoffice
 
-When an image has not yet been saved, the property explains that its placeholder will be generated on save. Generation failures are logged and transient failures are retried without blocking the media save.
+The read-only **Blur placeholder** property appears after the standard image fields and shows the generated preview, its representation, dimensions, and stored string.
+
+Before an image has been saved, the property says its placeholder will be generated on save. Generation failures are logged and transient failures retried, without blocking the media save.
 
 ## Delivery API
 
@@ -123,13 +133,13 @@ Enable the Delivery API and its media endpoints in the host application's `appse
 }
 ```
 
-Request `blurPlaceholder` explicitly to keep the additional payload opt-in:
+Then request `blurPlaceholder` by name, which keeps the extra payload opt-in:
 
 ```http
 GET /umbraco/delivery/api/v2/media/item/{mediaId}?expand=properties[$all]&fields=properties[blurPlaceholder]
 ```
 
-The response includes the generated string in the media item's `properties` object:
+The response carries the generated string in the media item's `properties` object:
 
 ```json
 {
@@ -155,14 +165,18 @@ The response includes the generated string in the media item's `properties` obje
 }
 ```
 
-With the default configuration, `blurPlaceholder` is ready to pass to an image component as a blur data URL. Native BlurHash and ThumbHash values can instead be decoded on the application server; see the Delivery API guide for Next.js and Nuxt server-component examples.
+With the default configuration, `blurPlaceholder` is ready to pass to an image component as a blur data URL. Native BlurHash and ThumbHash values can instead be decoded on the application server; the Delivery API guide has Next.js and Nuxt server-component examples.
 
 ## Documentation
 
-- [Overview](https://blur.thebuilder.dk/overview): compare the output formats and their payloads.
+- [Overview](https://blur.thebuilder.dk/overview): compare the output formats and their measured payloads.
 - [Quickstart](https://blur.thebuilder.dk/quickstart): install, configure, and verify the package.
 - [Delivery API](https://blur.thebuilder.dk/delivery-api): request and consume the property, including native-hash decoding.
-- [Operations](https://blur.thebuilder.dk/operations): backfills, retries, logging, and health checks.
-- [License and attribution](https://blur.thebuilder.dk/license): package licensing and bundled third-party implementation notices.
+- [Operations](https://blur.thebuilder.dk/operations): backfills, retries, schema ownership, and troubleshooting.
+- [License and attribution](https://blur.thebuilder.dk/license): package licensing and bundled third-party notices.
 
-The runnable sample host is available in [`samples/TheBuilder.BlurPlaceholder.Example`](https://github.com/thebuilder/blur-placeholder/tree/main/samples/TheBuilder.BlurPlaceholder.Example).
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the repository layout, local development setup, and how to submit a pull request. NuGet publishing is documented in [docs/releasing.md](docs/releasing.md). GitHub Releases are the authoritative changelog and are surfaced in the [documentation changelog](https://blur.thebuilder.dk/changelog/).
+
+The runnable sample host lives in [`samples/TheBuilder.BlurPlaceholder.Example`](https://github.com/thebuilder/blur-placeholder/tree/main/samples/TheBuilder.BlurPlaceholder.Example).

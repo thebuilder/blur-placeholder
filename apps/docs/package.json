@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "blume dev",
     "build": "pnpm run generate:og && blume build",
+    "check": "blume check",
+    "validate": "blume validate",
     "generate:og": "umbraco-docs-og",
     "check:og": "umbraco-docs-og --check"
   },
