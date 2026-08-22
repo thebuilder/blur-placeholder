@@ -5,46 +5,46 @@ seo:
   image: /og/overview.png
 ---
 
-Use this page to compare the package's actual output formats and payloads. The [landing page](/) owns the product overview and backoffice preview; this page focuses on the technical choice your frontend needs to make.
+Blur Placeholder can store three kinds of value, and each one trades payload size against how much work your frontend has to do. This page shows the measured difference so you can choose before you configure anything.
 
 :::tip[Start with WebP]
-The default tiny WebP is the simplest choice: it is ready to use as an image source and requires no client decoder. Choose a native hash when every byte matters or when its visual and metadata advantages justify decoder code in the client.
+The default tiny WebP works as an image source with no client decoder. Reach for a native hash when you need the smaller payload, or when ThumbHash's aspect-ratio and alpha metadata are worth writing decoder code for.
 :::
 
-## Compare the three approaches
+## Measured output
 
-Every result below was produced by this package with its documented defaults. The tiny images are enlarged and blurred with CSS, which is how a placeholder is normally presented. The source set deliberately includes landscape, portrait, and transparent artwork.
+Every result below came from this package running its documented defaults. The tiny images are enlarged and blurred with CSS, which is how a placeholder is normally presented. The source set covers landscape, portrait, and transparent artwork.
 
 <PlaceholderComparison />
 
-The measurements separate the compact native hash from the optional decoded WebP representation. A data URL also includes roughly one-third base64 overhead plus its MIME prefix; the table reports both binary WebP bytes and total data URL characters.
+The measurements keep the compact native hash separate from the optional decoded WebP. A data URL also carries roughly one-third base64 overhead plus its MIME prefix, so the table reports binary WebP bytes alongside total data URL characters.
 
-## Which approach should I choose?
+## Which output should I choose?
 
-| Approach | Best when | Advantages | Trade-offs |
+| Output | Best when | Advantages | Trade-offs |
 | --- | --- | --- | --- |
-| **Tiny WebP** | You want a browser-ready `blurDataURL` with no runtime library. | Simplest integration; predictable dimensions and output; works anywhere an image URL works. | Usually larger than a native hash; aspect ratio must still come from the media metadata. |
-| **BlurHash** | You want a very short configurable text value and already have a decoder. | Compact text; adjustable X/Y component detail; broad ecosystem support. | Requires client decoding when stored natively; does not encode aspect ratio or alpha. |
-| **ThumbHash** | Aspect ratio, accurate average color, or transparency matters. | Encodes aspect ratio and alpha; strong color reproduction; compact binary representation. | Requires client decoding when stored natively; algorithm detail is not configurable. |
-| **Hash decoded to WebP** | You prefer the hash's reconstructed look but cannot ship a decoder. | Browser-ready output while preserving the BlurHash or ThumbHash aesthetic. | Removes most of the native hash's payload advantage; server output is larger than the raw hash. |
+| **Tiny WebP** | You want a browser-ready `blurDataURL` and no runtime library. | Works anywhere an image URL works, with predictable dimensions. | Larger than a native hash, and aspect ratio still has to come from the media metadata. |
+| **BlurHash** | You want a short text value and already have a decoder. | Compact text with an adjustable X/Y component grid, plus decoders in most languages. | Needs a decoder when stored natively, and encodes neither aspect ratio nor alpha. |
+| **ThumbHash** | Aspect ratio, average color, or transparency matters. | Encodes aspect ratio and alpha, and reproduces color more accurately. | Needs a decoder when stored natively, and its detail level is fixed. |
+| **Hash decoded to WebP** | You want a hash's reconstructed look but cannot ship a decoder. | Browser-ready output that keeps the BlurHash or ThumbHash appearance. | Gives up most of the native hash's size advantage. |
 
-ThumbHash's upstream documentation describes its aspect-ratio, color, detail, and alpha advantages over BlurHash. BlurHash remains attractive when its tunable component grid or larger decoder ecosystem is more important.
+The [ThumbHash project page](https://evanw.github.io/thumbhash/) compares the two algorithms directly and shows where ThumbHash wins on aspect ratio, color, and alpha. BlurHash is still the better fit when you want its tunable component grid or its wider set of decoders.
 
 ## Libraries and attribution
 
 - [blurhash.net](https://github.com/MarkusPalcer/blurhash.net) provides the ImageSharp-compatible C# BlurHash encoder and decoder used by the package.
-- [BlurHash for JavaScript](https://github.com/woltapp/blurhash/tree/master/TypeScript) is used by the Backoffice preview for independent native-hash verification.
-- [ThumbHash](https://github.com/evanw/thumbhash) documents the algorithm, official JavaScript decoder, and interactive [ThumbHash demo](https://evanw.github.io/thumbhash/).
-- The integrated C# ThumbHash port is attributed to [pull request 50](https://github.com/evanw/thumbhash/pull/50) and pinned to its reviewed commit. See [License and attribution](/license).
+- [BlurHash for JavaScript](https://github.com/woltapp/blurhash/tree/master/TypeScript) verifies native hashes independently in the backoffice preview.
+- [ThumbHash](https://github.com/evanw/thumbhash) documents the algorithm and ships the official JavaScript decoder.
+- The bundled C# ThumbHash port comes from [pull request 50](https://github.com/evanw/thumbhash/pull/50), pinned to its reviewed commit. See [License and attribution](/license).
 
 ## Stored value
 
-The property contains one self-describing string, never a JSON envelope:
+The property holds one self-describing string, never a JSON envelope:
 
 | Prefix | Representation |
 | --- | --- |
-| `data:image/webp;base64,` | Direct tiny WebP or a hash reconstructed and encoded as WebP. |
+| `data:image/webp;base64,` | A direct tiny WebP, or a hash reconstructed and encoded as WebP. |
 | `blurhash:` | Native BlurHash text. |
 | `thumbhash:` | Base64-encoded native ThumbHash bytes. |
 
-Continue with the [Quickstart](/quickstart), then use the [Delivery API guide](/delivery-api) to consume the field.
+Continue with the [Quickstart](/quickstart), then use the [Delivery API guide](/delivery-api) to consume the property.

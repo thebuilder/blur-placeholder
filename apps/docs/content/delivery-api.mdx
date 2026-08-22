@@ -1,13 +1,13 @@
 ---
 title: Delivery API
-description: Request the placeholder explicitly without changing core media conversion.
+description: Request the placeholder through the Delivery API and render it in Next.js or Nuxt, including native BlurHash and ThumbHash values.
 seo:
   image: /og/delivery-api.png
 ---
 
-The extension does not replace Umbraco's shallow media converter. Request the property explicitly through the Delivery API:
+The package leaves Umbraco's shallow media converter alone, so `blurPlaceholder` never appears in a media response you did not ask for. You request it explicitly instead.
 
-Enable the Delivery API and its media endpoints in the host application first:
+Start by enabling the Delivery API and its media endpoints in the host application:
 
 ```json
 {
@@ -26,11 +26,13 @@ Enable the Delivery API and its media endpoints in the host application first:
 }
 ```
 
+Then ask for the property by name:
+
 ```http
 GET /umbraco/delivery/api/v2/media/item/{mediaId}?expand=properties[$all]&fields=properties[blurPlaceholder]
 ```
 
-For a picker response, use the same expansion and field selection. Direct media responses can use the same property selection. This keeps the default response shape stable and makes the extra payload opt-in.
+The same expansion and field selection works for a media picker response. Every other media response keeps its usual shape, so the extra payload only reaches the clients that ask for it.
 
 ## Example API response
 
@@ -101,15 +103,15 @@ defineProps<{ media: MediaItem }>();
 
 </CodeGroup>
 
-This does not require a browser decoder and is the recommended Delivery API contract when payload simplicity matters. The data URL is a placeholder, not a replacement for the real image URL.
+No browser decoder is involved, which is why this is the default. Remember the data URL is a placeholder; the real image still loads from `media.url`.
 
 ## Consume a native hash
 
-Set `DecodeToDataUrl` to `false` only when saving the smaller native representation is worth decoding it in your application server.
+Set `DecodeToDataUrl` to `false` when the smaller stored value is worth decoding it on your application server.
 
-Native values remain self-describing: `blurhash:` adds 9 characters and `thumbhash:` adds 10. The repeated prefixes compress to almost nothing when the Delivery API response uses gzip or Brotli, and the discriminator prevents a configuration change from sending a ThumbHash to a BlurHash decoder.
+Native values keep their prefix. `blurhash:` adds 9 characters and `thumbhash:` adds 10, and both compress to almost nothing once the Delivery API response uses gzip or Brotli. The prefix is what stops a configuration change from quietly feeding a ThumbHash to a BlurHash decoder.
 
-Install `blurhash`, `thumbhash`, and `sharp`. The framework examples decode the hash in a server component and pass only the resulting WebP data URL to the image component:
+Install `blurhash`, `thumbhash`, and `sharp`. Both examples below decode in a server component and pass only the resulting WebP data URL to the image component:
 
 <CodeGroup>
 
@@ -163,7 +165,7 @@ const placeholder = await decodePlaceholder(
 
 </CodeGroup>
 
-Keep the decoder in a server-only module shared by the component. Native values always carry the prefix used to select the decoder.
+Both components share one server-only decoder module. It branches on the prefix, so it handles either algorithm without extra configuration:
 
 ```ts title="decode-placeholder.server.ts"
 import sharp from "sharp";

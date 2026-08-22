@@ -3,8 +3,14 @@
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "scripts": {
-    "build": "pnpm --filter @thebuilder/blur-placeholder-client build && pnpm --filter @thebuilder/blur-placeholder-docs build",
-    "build:client": "pnpm --filter @thebuilder/blur-placeholder-client build",
-    "build:docs": "pnpm --filter @thebuilder/blur-placeholder-docs build"
+    "build": "pnpm --recursive --if-present run build",
+    "check": "pnpm --recursive --if-present run check",
+    "client:build": "pnpm --filter @thebuilder/blur-placeholder-client build",
+    "client:watch": "pnpm --filter @thebuilder/blur-placeholder-client watch",
+    "client:test": "pnpm --filter @thebuilder/blur-placeholder-client test:decoders",
+    "docs:dev": "pnpm --filter @thebuilder/blur-placeholder-docs dev",
+    "docs:build": "pnpm --filter @thebuilder/blur-placeholder-docs build",
+    "docs:check": "pnpm --filter @thebuilder/blur-placeholder-docs check",
+    "docs:validate": "pnpm --filter @thebuilder/blur-placeholder-docs validate"
   }
 }
