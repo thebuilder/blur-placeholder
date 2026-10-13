@@ -1,4 +1,6 @@
 import { defineConfig } from "blume";
+import { vercel } from "blume/analytics";
+import { custom, filesystem } from "blume/sources";
 
 import { githubReleaseChangelogSource } from "./sources/github-releases";
 import { blurPlaceholderPackage } from "./umbraco-package";
@@ -17,14 +19,13 @@ export default defineConfig({
   },
   content: {
     sources: [
-      { type: "filesystem", root: "content" },
-      {
-        type: "custom",
-        source: githubReleaseChangelogSource({
+      filesystem({ root: "content" }),
+      custom(
+        githubReleaseChangelogSource({
           owner: "thebuilder",
           repo: "blur-placeholder",
         }),
-      },
+      ),
     ],
   },
   navigation: {
@@ -36,7 +37,6 @@ export default defineConfig({
     ],
   },
   deployment: {
-    output: "static",
     site: "https://blur.thebuilder.dk",
   },
   seo: {
@@ -44,10 +44,8 @@ export default defineConfig({
     // Disable Blume's generated /og routes so it cannot overwrite them.
     og: { enabled: false },
   },
-  analytics: {
-    vercel: true,
-  },
-  ai: {
+  analytics: [vercel()],
+  agents: {
     llmsTxt: true,
   },
   theme: {
