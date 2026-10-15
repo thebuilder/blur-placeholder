@@ -1,3 +1,4 @@
+import { docsTheme } from "@thebuilder/umbraco-docs";
 import { defineConfig } from "blume";
 import { vercel } from "blume/analytics";
 import { custom, filesystem } from "blume/sources";
@@ -45,10 +46,9 @@ export default defineConfig({
     og: { enabled: false },
   },
   analytics: [vercel()],
+  // The docs family's shared accent and fonts, so every package site looks alike.
+  theme: { ...docsTheme },
   agents: {
     llmsTxt: true,
-  },
-  theme: {
-    accent: "#2563eb",
   },
 });
