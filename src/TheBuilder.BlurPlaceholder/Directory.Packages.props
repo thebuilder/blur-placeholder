@@ -12,8 +12,8 @@
     <PackageVersion Include="Umbraco.Cms.Api.Management" Version="$(UmbracoVersion)" />
     <PackageVersion Include="Umbraco.Cms.Web.Common" Version="$(UmbracoVersion)" />
     <PackageVersion Include="Umbraco.Cms.Web.Website" Version="$(UmbracoVersion)" />
-    <PackageVersion Include="Blurhash.ImageSharp" Version="4.1.1" />
-    <PackageVersion Include="SixLabors.ImageSharp" Version="3.2.0" />
+    <PackageVersion Include="Blurhash.ImageSharp" Version="4.0.1" />
+    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.12" />
     <!-- Security floors for dependencies inherited from the supported Umbraco range. -->
     <PackageVersion Include="MailKit" Version="4.18.1" />
     <PackageVersion Include="MessagePack" Version="3.1.12" />
