@@ -15,10 +15,10 @@
     <PackageVersion Include="Blurhash.ImageSharp" Version="4.0.1" />
     <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.12" />
     <!-- Security floors for dependencies inherited from the supported Umbraco range. -->
-    <PackageVersion Include="MailKit" Version="4.17.0" />
-    <PackageVersion Include="MessagePack" Version="3.1.8" />
+    <PackageVersion Include="MailKit" Version="4.18.1" />
+    <PackageVersion Include="MessagePack" Version="3.1.12" />
     <PackageVersion Include="Microsoft.OpenApi" Version="2.12.2" />
-    <PackageVersion Include="MimeKit" Version="4.17.0" />
-    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.12" />
+    <PackageVersion Include="MimeKit" Version="4.18.1" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.13" />
   </ItemGroup>
 </Project>
