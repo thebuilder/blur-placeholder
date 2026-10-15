@@ -25,7 +25,7 @@ The package registers its services and backoffice extension automatically. To wo
 
 The defaults produce a tiny WebP data URL, so you can skip this step entirely and restart the application. To change the output, add the `BlurPlaceholder` section to `appsettings.json`:
 
-```json
+```json appsettings.json
 {
   "BlurPlaceholder": {
     "Enabled": true,
@@ -41,7 +41,7 @@ The defaults produce a tiny WebP data URL, so you can skip this step entirely an
 }
 ```
 
-Every value above is the default. See the settings reference below for what each one changes.
+Every value above is the default. See the [settings reference](#settings-reference) for what each one changes.
 
 ## 4. Restart the application
 
@@ -54,6 +54,8 @@ Upload or replace an Image media item and save it. The read-only **Blur placehol
 If the property is missing or empty, see [Operations](/operations) for the migration, health-check, and retry behavior behind it.
 
 ## Settings reference
+
+All settings live in the `BlurPlaceholder` section.
 
 | Setting | Default | Purpose |
 | --- | --- | --- |

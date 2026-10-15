@@ -5,6 +5,7 @@ import data from "blume:data";
 import { loadUmbracoPackages } from "@thebuilder/umbraco-docs";
 import { EcosystemSection, InstallCommand, LandingHero, LandingRoot } from "@thebuilder/umbraco-docs/astro";
 import HeroParticles from "@thebuilder/umbraco-docs/components/HeroParticles";
+import CodeBlock from "blume/components/content/CodeBlock.astro";
 
 import "./_home/home.css";
 
@@ -20,6 +21,8 @@ const marketplaceUrl = blurPlaceholderPackage.links.marketplace;
 const nugetUrl = blurPlaceholderPackage.links.nuget;
 const repoUrl = blurPlaceholderPackage.links.github;
 const installCommand = "dotnet add package TheBuilder.BlurPlaceholder";
+const deliveryRequest =
+  "GET /umbraco/delivery/api/v2/media/item/{mediaId}?expand=properties[$all]&fields=properties[blurPlaceholder]";
 const deliveryResponse = `{
   "name": "Alpine lake",
   "url": "/media/n1hbay0t/alpine-lake.jpg",
@@ -173,14 +176,10 @@ const features = [
         </p>
         <a class="button button--secondary" href="/delivery-api">Read the guide</a>
       </div>
-      <figure class="code-preview reveal" style="--i: 1">
-        <figcaption class="code-preview__bar">
-          <span class="code-preview__dots" aria-hidden="true"><i></i><i></i><i></i></span>
-          <span>Delivery API response</span>
-          <span class="code-preview__language">JSON</span>
-        </figcaption>
-        <pre tabindex="0"><code>{deliveryResponse}</code></pre>
-      </figure>
+      <div class="code-preview reveal" style="--i: 1">
+        <CodeBlock lang="http" title="Delivery API request" code={deliveryRequest} />
+        <CodeBlock lang="json" title="Delivery API response" code={deliveryResponse} />
+      </div>
     </section>
 
     <section class="shell closing reveal">
