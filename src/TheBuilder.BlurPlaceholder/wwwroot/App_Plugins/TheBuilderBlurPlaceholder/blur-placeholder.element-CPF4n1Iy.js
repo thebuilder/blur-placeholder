@@ -133,7 +133,7 @@ function C(e, t) {
 	return n;
 }
 //#endregion
-//#region \0@oxc-project+runtime@0.149.0/helpers/esm/decorate.js
+//#region \0@oxc-project+runtime@0.153.0/helpers/esm/decorate.js
 function w(e, t, n, r) {
 	var i = arguments.length, a = i < 3 ? t : r === null ? r = Object.getOwnPropertyDescriptor(t, n) : r, o;
 	if (typeof Reflect == "object" && typeof Reflect.decorate == "function") a = Reflect.decorate(e, t, n, r);
@@ -151,34 +151,33 @@ var T = class extends e {
 	}
 	async _decodeValue() {
 		let e = (this.value ?? "").trim(), t = ++this._decodeRequest;
-		if (this._copied = !1, this._blurred = !0, this._copyError = void 0, !e) {
-			this._decodeState = { status: "empty" };
-			return;
-		}
-		this._decodeState = {
-			status: "pending",
-			raw: e
-		};
-		try {
-			let n = await b(e), r = n.kind === "webp" ? n.dataUrl : D(n.rgba, n.width, n.height), i = n.kind === "webp" ? await O(r) : {
-				width: n.width,
-				height: n.height
-			};
-			if (t !== this._decodeRequest) return;
+		if (this._copied = !1, this._blurred = !0, this._copyError = void 0, !e) this._decodeState = { status: "empty" };
+		else {
 			this._decodeState = {
-				status: "ready",
-				raw: e,
-				label: n.label,
-				preview: r,
-				...i
+				status: "pending",
+				raw: e
 			};
-		} catch (n) {
-			if (t !== this._decodeRequest) return;
-			this._decodeState = {
-				status: "invalid",
-				raw: e,
-				error: n instanceof Error ? n.message : "The placeholder could not be decoded."
-			};
+			try {
+				let n = await b(e), r = n.kind === "webp" ? n.dataUrl : D(n.rgba, n.width, n.height), i = n.kind === "webp" ? await O(r) : {
+					width: n.width,
+					height: n.height
+				};
+				if (t !== this._decodeRequest) return;
+				this._decodeState = {
+					status: "ready",
+					raw: e,
+					label: n.label,
+					preview: r,
+					...i
+				};
+			} catch (n) {
+				if (t !== this._decodeRequest) return;
+				this._decodeState = {
+					status: "invalid",
+					raw: e,
+					error: n instanceof Error ? n.message : "The placeholder could not be decoded."
+				};
+			}
 		}
 	}
 	async _copyValue() {
@@ -288,4 +287,4 @@ var k = T;
 //#endregion
 export { T as TheBuilderBlurPlaceholderPropertyEditorElement, k as default };
 
-//# sourceMappingURL=blur-placeholder.element-DFefcW3f.js.map
+//# sourceMappingURL=blur-placeholder.element-CPF4n1Iy.js.map
