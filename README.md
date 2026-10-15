@@ -180,3 +180,7 @@ With the default configuration, `blurPlaceholder` is ready to pass to an image c
 Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the repository layout, local development setup, and how to submit a pull request. NuGet publishing is documented in [docs/releasing.md](docs/releasing.md). GitHub Releases are the authoritative changelog and are surfaced in the [documentation changelog](https://blur.thebuilder.dk/changelog/).
 
 The runnable sample host lives in [`samples/TheBuilder.BlurPlaceholder.Example`](https://github.com/thebuilder/blur-placeholder/tree/main/samples/TheBuilder.BlurPlaceholder.Example).
+
+## License
+
+MIT. See [LICENSE](LICENSE). Bundled third-party code is listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
