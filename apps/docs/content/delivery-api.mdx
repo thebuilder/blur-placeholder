@@ -9,7 +9,7 @@ The package leaves Umbraco's shallow media converter alone, so `blurPlaceholder`
 
 Start by enabling the Delivery API and its media endpoints in the host application:
 
-```json
+```json appsettings.json
 {
   "Umbraco": {
     "CMS": {
@@ -38,7 +38,7 @@ The same expansion and field selection works for a media picker response. Every 
 
 The requested property appears in the media item's `properties` object as one plain string:
 
-```json
+```json Response
 {
   "path": "/station-platform.png/",
   "createDate": "2026-08-10T08:46:31.004237Z",
