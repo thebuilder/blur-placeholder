@@ -1,6 +1,13 @@
+using System.Buffers.Binary;
+using System.Text;
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Metadata.Profiles.Exif;
+using SixLabors.ImageSharp.Metadata.Profiles.Icc;
+using SixLabors.ImageSharp.Metadata.Profiles.Iptc;
+using SixLabors.ImageSharp.Metadata.Profiles.Xmp;
 using SixLabors.ImageSharp.PixelFormats;
 using TheBuilder.BlurPlaceholder.Configuration;
 using TheBuilder.BlurPlaceholder.Generation;
@@ -27,6 +34,39 @@ public sealed class PlaceholderGeneratorTests
         using var decoded = Image.Load(Convert.FromBase64String(value[Constants.WebpDataUrlPrefix.Length..]));
         Assert.InRange(decoded.Width, 1, 16);
         Assert.InRange(decoded.Height, 1, 16);
+    }
+
+    [Theory]
+    [InlineData(BlurPlaceholderAlgorithm.Webp)]
+    [InlineData(BlurPlaceholderAlgorithm.BlurHash)]
+    [InlineData(BlurPlaceholderAlgorithm.ThumbHash)]
+    public async Task Webp_output_omits_source_metadata(BlurPlaceholderAlgorithm algorithm)
+    {
+        await using var source = await CreateImageWithMetadataAsync();
+        using (var sourceImage = Image.Load(source.ToArray()))
+        {
+            Assert.NotNull(sourceImage.Metadata.ExifProfile);
+            Assert.NotNull(sourceImage.Metadata.XmpProfile);
+            Assert.NotNull(sourceImage.Metadata.IccProfile);
+            Assert.NotNull(sourceImage.Metadata.IptcProfile);
+        }
+
+        var generator = new PlaceholderGenerator(Options.Create(new BlurPlaceholderOptions
+        {
+            Algorithm = algorithm,
+            DecodeToDataUrl = true,
+        }));
+        var result = await generator.GenerateAsync(source);
+
+        Assert.Equal(PlaceholderGenerationStatus.Generated, result.Status);
+        var value = Assert.IsType<string>(result.Mutation.Value);
+        Assert.StartsWith(Constants.WebpDataUrlPrefix, value, StringComparison.Ordinal);
+        var bytes = Convert.FromBase64String(value[Constants.WebpDataUrlPrefix.Length..]);
+        var chunks = ReadWebpChunks(bytes);
+        Assert.DoesNotContain("EXIF", chunks);
+        Assert.DoesNotContain("XMP ", chunks);
+        Assert.DoesNotContain("ICCP", chunks);
+        Assert.InRange(bytes.Length, 1, 256);
     }
 
     [Fact]
@@ -181,5 +221,65 @@ public sealed class PlaceholderGeneratorTests
         output.Position = 0;
         var copy = new MemoryStream(output.ToArray());
         return copy;
+    }
+
+    private static async Task<MemoryStream> CreateImageWithMetadataAsync()
+    {
+        await using var png = await CreateImageAsync();
+        using var image = Image.Load<Rgba32>(png.ToArray());
+
+        var exif = new ExifProfile();
+        exif.SetValue(ExifTag.Software, "Camera firmware 1.0");
+        exif.SetValue(ExifTag.Copyright, new string('c', 400));
+        image.Metadata.ExifProfile = exif;
+
+        image.Metadata.XmpProfile = new XmpProfile(Encoding.UTF8.GetBytes(
+            "<?xpacket begin=\"\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>"
+            + "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">"
+            + "<rdf:Description rdf:about=\"\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">"
+            + $"<dc:description>{new string('x', 1000)}</dc:description>"
+            + "</rdf:Description></rdf:RDF></x:xmpmeta><?xpacket end=\"w\"?>"));
+
+        image.Metadata.IccProfile = new IccProfile(CreateMinimalIccProfile());
+
+        var iptc = new IptcProfile();
+        iptc.SetValue(IptcTag.Caption, "Caption");
+        image.Metadata.IptcProfile = iptc;
+
+        var output = new MemoryStream();
+        await image.SaveAsJpegAsync(output, new JpegEncoder());
+        output.Position = 0;
+        return output;
+    }
+
+    private static byte[] CreateMinimalIccProfile()
+    {
+        // A header-only sRGB-like display profile with an empty tag table.
+        var profile = new byte[132];
+        BinaryPrimitives.WriteUInt32BigEndian(profile.AsSpan(0), (uint)profile.Length);
+        BinaryPrimitives.WriteUInt32BigEndian(profile.AsSpan(8), 0x04300000);
+        Encoding.ASCII.GetBytes("mntr").CopyTo(profile, 12);
+        Encoding.ASCII.GetBytes("RGB ").CopyTo(profile, 16);
+        Encoding.ASCII.GetBytes("XYZ ").CopyTo(profile, 20);
+        Encoding.ASCII.GetBytes("acsp").CopyTo(profile, 36);
+        return profile;
+    }
+
+    private static List<string> ReadWebpChunks(byte[] webp)
+    {
+        Assert.Equal("RIFF", Encoding.ASCII.GetString(webp, 0, 4));
+        Assert.Equal("WEBP", Encoding.ASCII.GetString(webp, 8, 4));
+
+        var chunks = new List<string>();
+        var offset = 12;
+        while (offset + 8 <= webp.Length)
+        {
+            chunks.Add(Encoding.ASCII.GetString(webp, offset, 4));
+            var size = (int)BinaryPrimitives.ReadUInt32LittleEndian(webp.AsSpan(offset + 4));
+            offset += 8 + size + (size & 1);
+        }
+
+        Assert.Equal(webp.Length, offset);
+        return chunks;
     }
 }
