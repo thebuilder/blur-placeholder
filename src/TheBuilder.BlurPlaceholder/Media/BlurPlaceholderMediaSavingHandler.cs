@@ -18,8 +18,25 @@ internal sealed class BlurPlaceholderMediaSavingHandler(
     {
         if (!options.Value.Enabled) return;
 
-        foreach (IMedia media in notification.SavedEntities.Where(ShouldGenerate))
+        foreach (IMedia media in notification.SavedEntities.Where(IsImageWithPlaceholder))
         {
+            if (BlurPlaceholderMaintenanceSave.IsActive)
+            {
+                logger.LogDebug(
+                    "Left the blur placeholder for image media {MediaKey} to maintenance, which is saving it",
+                    media.Key);
+                continue;
+            }
+
+            var reason = GetGenerationReason(media);
+            if (reason is null)
+            {
+                logger.LogDebug(
+                    "Kept the blur placeholder for image media {MediaKey}; the source file is unchanged",
+                    media.Key);
+                continue;
+            }
+
             var result = await processor.GenerateAsync(media, cancellationToken);
             if (result.Status == PlaceholderGenerationStatus.RetryableFailure)
             {
@@ -28,11 +45,27 @@ internal sealed class BlurPlaceholderMediaSavingHandler(
                     media.Key,
                     result.Message);
             }
+            else
+            {
+                logger.LogDebug(
+                    "Processed the blur placeholder for image media {MediaKey} because the {Reason}: {Status}",
+                    media.Key,
+                    reason,
+                    result.Status);
+            }
         }
     }
 
-    internal static bool ShouldGenerate(IMedia media) =>
+    // An empty placeholder is filled on any save, so re-saving an image fixes it without waiting
+    // for maintenance. Saves made by maintenance itself are skipped above.
+    internal static string? GetGenerationReason(IMedia media)
+    {
+        if (media.IsPropertyDirty(Constants.SourcePropertyAlias)) return "source file changed";
+        if (string.IsNullOrWhiteSpace(media.GetValue<string>(Constants.PropertyAlias))) return "placeholder is empty";
+        return null;
+    }
+
+    private static bool IsImageWithPlaceholder(IMedia media) =>
         media.ContentType.Alias.Equals(Constants.DefaultImageMediaTypeAlias, StringComparison.OrdinalIgnoreCase)
-        && media.HasProperty(Constants.PropertyAlias)
-        && media.IsPropertyDirty(Constants.SourcePropertyAlias);
+        && media.HasProperty(Constants.PropertyAlias);
 }

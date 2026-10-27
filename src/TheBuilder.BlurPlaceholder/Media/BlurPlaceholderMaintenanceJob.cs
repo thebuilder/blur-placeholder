@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -18,13 +19,14 @@ internal sealed class BlurPlaceholderMaintenanceJob(
     MediaUrlGeneratorCollection mediaUrlGenerators,
     IMediaPlaceholderProcessor processor,
     IOptions<BlurPlaceholderOptions> options,
-    ILogger<BlurPlaceholderMaintenanceJob> logger) : IDistributedBackgroundJob
+    ILogger<BlurPlaceholderMaintenanceJob> logger,
+    TimeProvider timeProvider) : IDistributedBackgroundJob
 {
     private const int PageSize = 50;
 
     public string Name => "Blur Placeholder maintenance";
 
-    public TimeSpan Period => options.Value.RetryInterval;
+    public TimeSpan Period => BlurPlaceholderMaintenanceSchedule.PollInterval;
 
     public Task ExecuteAsync() => ExecuteAsync(CancellationToken.None);
 
@@ -38,7 +40,28 @@ internal sealed class BlurPlaceholderMaintenanceJob(
         var configurationChanged = options.Value.BackfillExisting
             && !string.Equals(previousFingerprint, fingerprint, StringComparison.Ordinal);
         var forceRegeneration = configurationChanged && previousFingerprint is not null;
-        if (await ProcessImagesAsync(fingerprint, forceRegeneration, cancellationToken) && configurationChanged)
+
+        var now = timeProvider.GetUtcNow();
+        var lastScan = ReadLastScan();
+        if (lastScan is null && !options.Value.BackfillExisting)
+        {
+            // Without a backfill the first scan for empty placeholders waits a full RetryInterval.
+            WriteLastScan(now);
+            lastScan = now;
+        }
+
+        var due = BlurPlaceholderMaintenanceSchedule.IsDue(
+            configurationChanged,
+            HasPendingCursor(fingerprint, forceRegeneration),
+            lastScan,
+            options.Value.RetryInterval,
+            now);
+        if (!due) return;
+
+        if (!await ProcessImagesAsync(fingerprint, forceRegeneration, cancellationToken)) return;
+
+        WriteLastScan(timeProvider.GetUtcNow());
+        if (configurationChanged)
             keyValueService.SetValue(Constants.BackfillFingerprintKey, fingerprint);
     }
 
@@ -57,6 +80,7 @@ internal sealed class BlurPlaceholderMaintenanceJob(
         var generated = 0;
         var retryCount = 0;
         var skipped = 0;
+        var startedAt = timeProvider.GetTimestamp();
 
         do
         {
@@ -71,7 +95,10 @@ internal sealed class BlurPlaceholderMaintenanceJob(
                 if (result.Mutation.Kind != PlaceholderMutationKind.Keep
                     && !string.Equals(previousValue, currentValue, StringComparison.Ordinal))
                 {
-                    mediaService.Save(image);
+                    using (BlurPlaceholderMaintenanceSave.Begin())
+                    {
+                        mediaService.Save(image);
+                    }
                 }
 
                 if (result.Status == PlaceholderGenerationStatus.Generated)
@@ -90,6 +117,17 @@ internal sealed class BlurPlaceholderMaintenanceJob(
 
             pageIndex++;
             WriteCursor(new BlurPlaceholderMaintenanceCursor(fingerprint, forceRegeneration, pageIndex));
+
+            if (pageIndex * PageSize < totalRecords && timeProvider.GetElapsedTime(startedAt) >= BlurPlaceholderMaintenanceSchedule.RunBudget)
+            {
+                logger.LogInformation(
+                    "Blur placeholder maintenance paused at page {PageIndex} after generating {GeneratedCount}, retaining {RetryCount} items for retry, and skipping {SkippedCount} media items; the next run resumes it",
+                    pageIndex,
+                    generated,
+                    retryCount,
+                    skipped);
+                return false;
+            }
         }
         while (pageIndex * PageSize < totalRecords);
 
@@ -117,6 +155,25 @@ internal sealed class BlurPlaceholderMaintenanceJob(
         return BlurPlaceholderMaintenanceCursor.Start(fingerprint, forceRegeneration);
     }
 
+    private bool HasPendingCursor(string fingerprint, bool forceRegeneration)
+    {
+        var stored = keyValueService.GetValue(Constants.MaintenanceCursorKey);
+        return !string.IsNullOrWhiteSpace(stored)
+            && BlurPlaceholderMaintenanceCursor.TryRestore(stored, fingerprint, forceRegeneration, out _);
+    }
+
+    private DateTimeOffset? ReadLastScan() =>
+        DateTimeOffset.TryParse(
+            keyValueService.GetValue(Constants.LastMaintenanceScanKey),
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.RoundtripKind,
+            out var lastScan)
+            ? lastScan
+            : null;
+
+    private void WriteLastScan(DateTimeOffset value) =>
+        keyValueService.SetValue(Constants.LastMaintenanceScanKey, value.ToString("O", CultureInfo.InvariantCulture));
+
     private void WriteCursor(BlurPlaceholderMaintenanceCursor cursor) =>
         keyValueService.SetValue(Constants.MaintenanceCursorKey, JsonSerializer.Serialize(cursor));
 
@@ -132,6 +189,50 @@ internal sealed class BlurPlaceholderMaintenanceJob(
         && media.HasProperty(Constants.SourcePropertyAlias)
         && media.TryGetMediaPath(Constants.SourcePropertyAlias, mediaUrlGenerators, out string? mediaPath)
         && !string.IsNullOrWhiteSpace(mediaPath);
+}
+
+internal static class BlurPlaceholderMaintenanceSchedule
+{
+    // Umbraco registers a new distributed job as if it had just run, so a Period equal to
+    // RetryInterval delayed the first backfill by 12 hours. The job polls every few minutes
+    // instead and enforces RetryInterval from the stored time of the last completed scan.
+    public static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(5);
+
+    // Another server may take over a run that lasts longer than Period plus Umbraco's
+    // MaximumExecutionTime (5 + 5 = 10 minutes by default). Pausing between pages after five
+    // minutes leaves the last page five minutes of margin; the next run resumes the pass.
+    public static readonly TimeSpan RunBudget = TimeSpan.FromMinutes(5);
+
+    public static bool IsDue(
+        bool configurationChanged,
+        bool cursorPending,
+        DateTimeOffset? lastScan,
+        TimeSpan retryInterval,
+        DateTimeOffset now) =>
+        configurationChanged
+        || cursorPending
+        || lastScan is null
+        || now - lastScan.Value >= retryInterval;
+}
+
+// Marks media saves made by maintenance, so the save handler does not generate the same
+// placeholder a second time when maintenance stores an empty value after a failed attempt.
+internal static class BlurPlaceholderMaintenanceSave
+{
+    private static readonly AsyncLocal<bool> Active = new();
+
+    public static bool IsActive => Active.Value;
+
+    public static IDisposable Begin()
+    {
+        Active.Value = true;
+        return new Scope();
+    }
+
+    private sealed class Scope : IDisposable
+    {
+        public void Dispose() => Active.Value = false;
+    }
 }
 
 internal sealed record BlurPlaceholderMaintenanceCursor(

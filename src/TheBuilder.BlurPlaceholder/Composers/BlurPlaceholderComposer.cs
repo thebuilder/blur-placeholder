@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using TheBuilder.BlurPlaceholder.Configuration;
@@ -27,6 +28,7 @@ public sealed class BlurPlaceholderComposer : IComposer
 
         builder.Services.AddSingleton<IPlaceholderGenerator, PlaceholderGenerator>();
         builder.Services.AddSingleton<IMediaPlaceholderProcessor, MediaPlaceholderProcessor>();
+        builder.Services.TryAddSingleton(TimeProvider.System);
         builder.Services.AddSingleton<IDistributedBackgroundJob, BlurPlaceholderMaintenanceJob>();
         builder.AddNotificationAsyncHandler<MediaSavingNotification, BlurPlaceholderMediaSavingHandler>();
 

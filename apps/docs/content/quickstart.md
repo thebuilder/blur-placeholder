@@ -45,7 +45,7 @@ Every value above is the default. See the [settings reference](#settings-referen
 
 ## 4. Restart the application
 
-The first startup installs the string data type and adds the `blurPlaceholder` property to the default Image media type. With `BackfillExisting` enabled, a background pass then processes the images already in the library.
+The first startup installs the string data type and adds the `blurPlaceholder` property to the default Image media type. With `BackfillExisting` enabled, a background pass starts within about six minutes and processes the images already in the library. Saving an image whose placeholder is still empty also fills it straight away.
 
 ## 5. Verify the result
 
