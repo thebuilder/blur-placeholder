@@ -28,6 +28,14 @@ public sealed class OptionsAndContractTests
     }
 
     [Fact]
+    public void Default_fingerprint_differs_from_0_2_1_so_upgrades_regenerate_metadata_heavy_output()
+    {
+        const string defaultFingerprintIn021 = "96235257329fe258a35978dbaa534a713a2d738a366db47998c7230f0d349d11";
+
+        Assert.NotEqual(defaultFingerprintIn021, BlurPlaceholderFingerprint.Create(new BlurPlaceholderOptions()));
+    }
+
+    [Fact]
     public void Operational_options_do_not_change_the_output_fingerprint()
     {
         var first = new BlurPlaceholderOptions();
