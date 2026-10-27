@@ -67,6 +67,23 @@ public sealed class MediaSavingHandlerTests
     }
 
     [Fact]
+    public async Task Maintenance_saves_are_left_to_maintenance()
+    {
+        var media = CreateMedia(sourceDirty: false, placeholder: string.Empty);
+        var processor = Substitute.For<IMediaPlaceholderProcessor>();
+        var handler = CreateHandler(processor);
+
+        using (BlurPlaceholderMaintenanceSave.Begin())
+        {
+            await handler.HandleAsync(
+                new MediaSavingNotification([media], new EventMessages()),
+                CancellationToken.None);
+        }
+
+        await processor.DidNotReceive().GenerateAsync(Arg.Any<IMedia>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Resaving_an_image_with_a_placeholder_keeps_it()
     {
         var media = CreateMedia(sourceDirty: false, placeholder: "data:image/webp;base64,AA==");

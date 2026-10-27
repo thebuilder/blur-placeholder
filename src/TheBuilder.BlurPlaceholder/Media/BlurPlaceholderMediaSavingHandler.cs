@@ -20,6 +20,14 @@ internal sealed class BlurPlaceholderMediaSavingHandler(
 
         foreach (IMedia media in notification.SavedEntities.Where(IsImageWithPlaceholder))
         {
+            if (BlurPlaceholderMaintenanceSave.IsActive)
+            {
+                logger.LogDebug(
+                    "Left the blur placeholder for image media {MediaKey} to maintenance, which is saving it",
+                    media.Key);
+                continue;
+            }
+
             var reason = GetGenerationReason(media);
             if (reason is null)
             {
@@ -49,8 +57,7 @@ internal sealed class BlurPlaceholderMediaSavingHandler(
     }
 
     // An empty placeholder is filled on any save, so re-saving an image fixes it without waiting
-    // for maintenance. A failed maintenance attempt also saves an empty value and is tried once
-    // more here; that only repeats the same outcome.
+    // for maintenance. Saves made by maintenance itself are skipped above.
     internal static string? GetGenerationReason(IMedia media)
     {
         if (media.IsPropertyDirty(Constants.SourcePropertyAlias)) return "source file changed";

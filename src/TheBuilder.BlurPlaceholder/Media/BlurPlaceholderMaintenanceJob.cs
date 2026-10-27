@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
@@ -20,7 +19,8 @@ internal sealed class BlurPlaceholderMaintenanceJob(
     MediaUrlGeneratorCollection mediaUrlGenerators,
     IMediaPlaceholderProcessor processor,
     IOptions<BlurPlaceholderOptions> options,
-    ILogger<BlurPlaceholderMaintenanceJob> logger) : IDistributedBackgroundJob
+    ILogger<BlurPlaceholderMaintenanceJob> logger,
+    TimeProvider timeProvider) : IDistributedBackgroundJob
 {
     private const int PageSize = 50;
 
@@ -41,7 +41,7 @@ internal sealed class BlurPlaceholderMaintenanceJob(
             && !string.Equals(previousFingerprint, fingerprint, StringComparison.Ordinal);
         var forceRegeneration = configurationChanged && previousFingerprint is not null;
 
-        var now = DateTimeOffset.UtcNow;
+        var now = timeProvider.GetUtcNow();
         var lastScan = ReadLastScan();
         if (lastScan is null && !options.Value.BackfillExisting)
         {
@@ -60,7 +60,7 @@ internal sealed class BlurPlaceholderMaintenanceJob(
 
         if (!await ProcessImagesAsync(fingerprint, forceRegeneration, cancellationToken)) return;
 
-        WriteLastScan(DateTimeOffset.UtcNow);
+        WriteLastScan(timeProvider.GetUtcNow());
         if (configurationChanged)
             keyValueService.SetValue(Constants.BackfillFingerprintKey, fingerprint);
     }
@@ -80,7 +80,7 @@ internal sealed class BlurPlaceholderMaintenanceJob(
         var generated = 0;
         var retryCount = 0;
         var skipped = 0;
-        var stopwatch = Stopwatch.StartNew();
+        var startedAt = timeProvider.GetTimestamp();
 
         do
         {
@@ -95,7 +95,10 @@ internal sealed class BlurPlaceholderMaintenanceJob(
                 if (result.Mutation.Kind != PlaceholderMutationKind.Keep
                     && !string.Equals(previousValue, currentValue, StringComparison.Ordinal))
                 {
-                    mediaService.Save(image);
+                    using (BlurPlaceholderMaintenanceSave.Begin())
+                    {
+                        mediaService.Save(image);
+                    }
                 }
 
                 if (result.Status == PlaceholderGenerationStatus.Generated)
@@ -115,7 +118,7 @@ internal sealed class BlurPlaceholderMaintenanceJob(
             pageIndex++;
             WriteCursor(new BlurPlaceholderMaintenanceCursor(fingerprint, forceRegeneration, pageIndex));
 
-            if (pageIndex * PageSize < totalRecords && stopwatch.Elapsed >= BlurPlaceholderMaintenanceSchedule.RunBudget)
+            if (pageIndex * PageSize < totalRecords && timeProvider.GetElapsedTime(startedAt) >= BlurPlaceholderMaintenanceSchedule.RunBudget)
             {
                 logger.LogInformation(
                     "Blur placeholder maintenance paused at page {PageIndex} after generating {GeneratedCount}, retaining {RetryCount} items for retry, and skipping {SkippedCount} media items; the next run resumes it",
@@ -191,13 +194,14 @@ internal sealed class BlurPlaceholderMaintenanceJob(
 internal static class BlurPlaceholderMaintenanceSchedule
 {
     // Umbraco registers a new distributed job as if it had just run, so a Period equal to
-    // RetryInterval delayed the first backfill by 12 hours. The job polls often instead and
-    // enforces RetryInterval from the stored time of the last completed scan.
-    public static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(1);
+    // RetryInterval delayed the first backfill by 12 hours. The job polls every few minutes
+    // instead and enforces RetryInterval from the stored time of the last completed scan.
+    public static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(5);
 
     // Another server may take over a run that lasts longer than Period plus Umbraco's
-    // MaximumExecutionTime (5 minutes by default), so long passes continue on the next run.
-    public static readonly TimeSpan RunBudget = TimeSpan.FromMinutes(2);
+    // MaximumExecutionTime (5 + 5 = 10 minutes by default). Pausing between pages after five
+    // minutes leaves the last page five minutes of margin; the next run resumes the pass.
+    public static readonly TimeSpan RunBudget = TimeSpan.FromMinutes(5);
 
     public static bool IsDue(
         bool configurationChanged,
@@ -209,6 +213,26 @@ internal static class BlurPlaceholderMaintenanceSchedule
         || cursorPending
         || lastScan is null
         || now - lastScan.Value >= retryInterval;
+}
+
+// Marks media saves made by maintenance, so the save handler does not generate the same
+// placeholder a second time when maintenance stores an empty value after a failed attempt.
+internal static class BlurPlaceholderMaintenanceSave
+{
+    private static readonly AsyncLocal<bool> Active = new();
+
+    public static bool IsActive => Active.Value;
+
+    public static IDisposable Begin()
+    {
+        Active.Value = true;
+        return new Scope();
+    }
+
+    private sealed class Scope : IDisposable
+    {
+        public void Dispose() => Active.Value = false;
+    }
 }
 
 internal sealed record BlurPlaceholderMaintenanceCursor(
