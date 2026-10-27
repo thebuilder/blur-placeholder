@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -24,7 +26,7 @@ internal sealed class BlurPlaceholderMaintenanceJob(
 
     public string Name => "Blur Placeholder maintenance";
 
-    public TimeSpan Period => options.Value.RetryInterval;
+    public TimeSpan Period => BlurPlaceholderMaintenanceSchedule.PollInterval;
 
     public Task ExecuteAsync() => ExecuteAsync(CancellationToken.None);
 
@@ -38,7 +40,28 @@ internal sealed class BlurPlaceholderMaintenanceJob(
         var configurationChanged = options.Value.BackfillExisting
             && !string.Equals(previousFingerprint, fingerprint, StringComparison.Ordinal);
         var forceRegeneration = configurationChanged && previousFingerprint is not null;
-        if (await ProcessImagesAsync(fingerprint, forceRegeneration, cancellationToken) && configurationChanged)
+
+        var now = DateTimeOffset.UtcNow;
+        var lastScan = ReadLastScan();
+        if (lastScan is null && !options.Value.BackfillExisting)
+        {
+            // Without a backfill the first scan for empty placeholders waits a full RetryInterval.
+            WriteLastScan(now);
+            lastScan = now;
+        }
+
+        var due = BlurPlaceholderMaintenanceSchedule.IsDue(
+            configurationChanged,
+            HasPendingCursor(fingerprint, forceRegeneration),
+            lastScan,
+            options.Value.RetryInterval,
+            now);
+        if (!due) return;
+
+        if (!await ProcessImagesAsync(fingerprint, forceRegeneration, cancellationToken)) return;
+
+        WriteLastScan(DateTimeOffset.UtcNow);
+        if (configurationChanged)
             keyValueService.SetValue(Constants.BackfillFingerprintKey, fingerprint);
     }
 
@@ -57,6 +80,7 @@ internal sealed class BlurPlaceholderMaintenanceJob(
         var generated = 0;
         var retryCount = 0;
         var skipped = 0;
+        var stopwatch = Stopwatch.StartNew();
 
         do
         {
@@ -90,6 +114,17 @@ internal sealed class BlurPlaceholderMaintenanceJob(
 
             pageIndex++;
             WriteCursor(new BlurPlaceholderMaintenanceCursor(fingerprint, forceRegeneration, pageIndex));
+
+            if (pageIndex * PageSize < totalRecords && stopwatch.Elapsed >= BlurPlaceholderMaintenanceSchedule.RunBudget)
+            {
+                logger.LogInformation(
+                    "Blur placeholder maintenance paused at page {PageIndex} after generating {GeneratedCount}, retaining {RetryCount} items for retry, and skipping {SkippedCount} media items; the next run resumes it",
+                    pageIndex,
+                    generated,
+                    retryCount,
+                    skipped);
+                return false;
+            }
         }
         while (pageIndex * PageSize < totalRecords);
 
@@ -117,6 +152,25 @@ internal sealed class BlurPlaceholderMaintenanceJob(
         return BlurPlaceholderMaintenanceCursor.Start(fingerprint, forceRegeneration);
     }
 
+    private bool HasPendingCursor(string fingerprint, bool forceRegeneration)
+    {
+        var stored = keyValueService.GetValue(Constants.MaintenanceCursorKey);
+        return !string.IsNullOrWhiteSpace(stored)
+            && BlurPlaceholderMaintenanceCursor.TryRestore(stored, fingerprint, forceRegeneration, out _);
+    }
+
+    private DateTimeOffset? ReadLastScan() =>
+        DateTimeOffset.TryParse(
+            keyValueService.GetValue(Constants.LastMaintenanceScanKey),
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.RoundtripKind,
+            out var lastScan)
+            ? lastScan
+            : null;
+
+    private void WriteLastScan(DateTimeOffset value) =>
+        keyValueService.SetValue(Constants.LastMaintenanceScanKey, value.ToString("O", CultureInfo.InvariantCulture));
+
     private void WriteCursor(BlurPlaceholderMaintenanceCursor cursor) =>
         keyValueService.SetValue(Constants.MaintenanceCursorKey, JsonSerializer.Serialize(cursor));
 
@@ -132,6 +186,29 @@ internal sealed class BlurPlaceholderMaintenanceJob(
         && media.HasProperty(Constants.SourcePropertyAlias)
         && media.TryGetMediaPath(Constants.SourcePropertyAlias, mediaUrlGenerators, out string? mediaPath)
         && !string.IsNullOrWhiteSpace(mediaPath);
+}
+
+internal static class BlurPlaceholderMaintenanceSchedule
+{
+    // Umbraco registers a new distributed job as if it had just run, so a Period equal to
+    // RetryInterval delayed the first backfill by 12 hours. The job polls often instead and
+    // enforces RetryInterval from the stored time of the last completed scan.
+    public static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(1);
+
+    // Another server may take over a run that lasts longer than Period plus Umbraco's
+    // MaximumExecutionTime (5 minutes by default), so long passes continue on the next run.
+    public static readonly TimeSpan RunBudget = TimeSpan.FromMinutes(2);
+
+    public static bool IsDue(
+        bool configurationChanged,
+        bool cursorPending,
+        DateTimeOffset? lastScan,
+        TimeSpan retryInterval,
+        DateTimeOffset now) =>
+        configurationChanged
+        || cursorPending
+        || lastScan is null
+        || now - lastScan.Value >= retryInterval;
 }
 
 internal sealed record BlurPlaceholderMaintenanceCursor(

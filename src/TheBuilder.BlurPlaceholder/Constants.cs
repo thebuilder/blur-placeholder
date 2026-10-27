@@ -15,4 +15,5 @@ internal static class Constants
     public const string WebpDataUrlPrefix = "data:image/webp;base64,";
     public const string BackfillFingerprintKey = "TheBuilder.BlurPlaceholder.BackfillFingerprint";
     public const string MaintenanceCursorKey = "TheBuilder.BlurPlaceholder.MaintenanceCursor";
+    public const string LastMaintenanceScanKey = "TheBuilder.BlurPlaceholder.LastMaintenanceScan";
 }
