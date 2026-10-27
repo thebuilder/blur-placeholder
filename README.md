@@ -52,7 +52,7 @@ The package registers its services and backoffice extension automatically. Then:
 3. Check the read-only **Blur placeholder** property on that media item for the generated preview.
 4. Request `blurPlaceholder` through the Delivery API wherever your frontend needs it.
 
-With `BackfillExisting` left on, a background pass starts within a couple of minutes of startup and processes the images already in the library. Saving an image whose placeholder is still empty also fills it straight away.
+With `BackfillExisting` left on, a background pass starts within about six minutes of startup and processes the images already in the library. Saving an image whose placeholder is still empty also fills it straight away.
 
 ## Configure
 
