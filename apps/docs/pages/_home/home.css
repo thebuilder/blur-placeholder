@@ -46,7 +46,6 @@
   border-radius: 999px;
   background: var(--udocs-gradient);
 }
-
 .section-heading h2,
 .backoffice h2,
 .closing h2 {
@@ -116,7 +115,6 @@
 .text-link:hover { text-decoration: underline; }
 
 .feature-card { position: relative; padding: 1.65rem; }
-.feature-card__number { display: block; margin-bottom: 1.5rem; color: var(--blume-accent); font-family: var(--blume-font-mono); font-size: 0.8rem; font-weight: 700; }
 
 .backoffice {
   display: grid;

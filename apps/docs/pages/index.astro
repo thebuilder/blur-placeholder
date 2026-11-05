@@ -157,7 +157,6 @@ const features = [
       <div class="feature-grid">
         {features.map((feature, index) => (
           <article class="feature-card reveal" style={`--i: ${index + 1}`}>
-            <span class="feature-card__number" aria-hidden="true">0{index + 1}</span>
             <h3>{feature.title}</h3>
             <p>{feature.body}</p>
           </article>
