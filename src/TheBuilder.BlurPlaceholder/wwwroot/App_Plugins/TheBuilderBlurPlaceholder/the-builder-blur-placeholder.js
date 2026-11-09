@@ -1,10 +1,9 @@
-//#endregion
-//#region src/bundle.manifests.ts
+// src/bundle.manifests.ts
 var e = [{
 	type: "propertyEditorUi",
 	alias: "TheBuilder.PropertyEditorUi.BlurPlaceholder",
 	name: "Blur Placeholder property editor",
-	element: () => import("./blur-placeholder.element-CPF4n1Iy.js"),
+	element: () => import("./blur-placeholder.element-D1rJrWXR.js"),
 	meta: {
 		label: "Blur placeholder",
 		propertyEditorSchemaAlias: "Umbraco.Plain.String",
@@ -13,7 +12,6 @@ var e = [{
 		supportsReadOnly: !0
 	}
 }];
-//#endregion
 export { e as manifests };
 
 //# sourceMappingURL=the-builder-blur-placeholder.js.map
