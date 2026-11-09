@@ -1,6 +1,6 @@
 import { UmbLitElement as e } from "@umbraco-cms/backoffice/lit-element";
 import { css as t, customElement as n, html as r, nothing as i, property as a, state as o } from "@umbraco-cms/backoffice/external/lit";
-//#region ../../../node_modules/.pnpm/blurhash@2.0.5/node_modules/blurhash/dist/esm/index.js
+// ../../../node_modules/.pnpm/blurhash@2.0.5/node_modules/blurhash/dist/esm/index.js
 var s = /* @__PURE__ */ "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~".split(""), c = (e) => {
 	let t = 0;
 	for (let n = 0; n < e.length; n++) {
@@ -58,8 +58,7 @@ var s = /* @__PURE__ */ "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrs
 	}
 	return f;
 };
-//#endregion
-//#region ../../../node_modules/.pnpm/thumbhash@0.1.1/node_modules/thumbhash/thumbhash.js
+// ../../../node_modules/.pnpm/thumbhash@0.1.1/node_modules/thumbhash/thumbhash.js
 function v(e) {
 	let { PI: t, min: n, max: r, cos: i, round: a } = Math, o = e[0] | e[1] << 8 | e[2] << 16, s = e[3] | e[4] << 8, c = (o & 63) / 63, l = (o >> 6 & 63) / 31.5 - 1, u = (o >> 12 & 63) / 31.5 - 1, d = (o >> 18 & 31) / 31, f = o >> 23, p = (s >> 3 & 63) / 63, m = (s >> 9 & 63) / 63, h = s >> 15, g = r(3, h ? f ? 5 : 7 : s & 7), _ = r(3, h ? s & 7 : f ? 5 : 7), v = f ? (e[5] & 15) / 15 : 1, b = (e[5] >> 4) / 15, x = f ? 6 : 5, S = 0, C = (t, n, r) => {
 		let i = [];
@@ -89,8 +88,7 @@ function y(e) {
 	let t = e[3], n = e[2] & 128, r = e[4] & 128;
 	return (r ? n ? 5 : 7 : t & 7) / (r ? t & 7 : n ? 5 : 7);
 }
-//#endregion
-//#region src/property-editor/decode-placeholder.ts
+// src/property-editor/decode-placeholder.ts
 function b(e) {
 	if (e.startsWith("data:image/webp;base64,")) return {
 		kind: "webp",
@@ -132,16 +130,14 @@ function C(e, t) {
 	for (let r = 0; r < t; r++) for (let i = +!r; i * t < e * (t - r); i++) n++;
 	return n;
 }
-//#endregion
-//#region \0@oxc-project+runtime@0.153.0/helpers/esm/decorate.js
+// \0@oxc-project+runtime@0.156.0/helpers/esm/decorate.js
 function w(e, t, n, r) {
 	var i = arguments.length, a = i < 3 ? t : r === null ? r = Object.getOwnPropertyDescriptor(t, n) : r, o;
 	if (typeof Reflect == "object" && typeof Reflect.decorate == "function") a = Reflect.decorate(e, t, n, r);
 	else for (var s = e.length - 1; s >= 0; s--) (o = e[s]) && (a = (i < 3 ? o(a) : i > 3 ? o(t, n, a) : o(t, n)) || a);
 	return i > 3 && a && Object.defineProperty(t, n, a), a;
 }
-//#endregion
-//#region src/property-editor/blur-placeholder.element.ts
+// src/property-editor/blur-placeholder.element.ts
 var T = class extends e {
 	constructor(...e) {
 		super(...e), this.value = "", this.readonly = !1, this._decodeState = { status: "empty" }, this._copied = !1, this._blurred = !0, this._decodeRequest = 0;
@@ -284,7 +280,6 @@ function O(e) {
 	});
 }
 var k = T;
-//#endregion
 export { T as TheBuilderBlurPlaceholderPropertyEditorElement, k as default };
 
-//# sourceMappingURL=blur-placeholder.element-CPF4n1Iy.js.map
+//# sourceMappingURL=blur-placeholder.element-D1rJrWXR.js.map
