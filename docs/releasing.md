@@ -21,7 +21,7 @@ The trusted publishing policy must be active before the first release. It exchan
 
 Before creating a release:
 
-1. Confirm all CI jobs pass for the commit to publish, including Umbraco 17.1, the latest 17.x, and the latest 18.x.
+1. Confirm all CI jobs pass for the commit to publish, including Umbraco 17.1, the latest 17.x, the latest 18.x, and the latest 19.x.
 2. Run `dotnet list src/TheBuilder.BlurPlaceholder/TheBuilder.BlurPlaceholder.csproj package --vulnerable --include-transitive` and resolve any runtime high or critical findings.
 3. Review `pnpm audit --prod`. The current `image-size` advisories affect only Blume's documentation build dependency, have no patched release, and reach neither the NuGet package nor the backoffice runtime. Re-evaluate that exception for every release.
 4. Inspect the package produced by CI before approving the `nuget` environment deployment.

@@ -3,6 +3,11 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <!-- Allow floating versions so extensions can align with the host Umbraco project's package versions -->
     <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
+    <!-- Umbraco 17 and 18 run on .NET 10, Umbraco 19 on .NET 11 only, so each target framework gets its own range. -->
+    <UmbracoVersion Condition="'$(UmbracoVersion)' == '' and '$(TargetFramework)' == 'net11.0'">[19.0.0-rc1,20.0.0)</UmbracoVersion>
+    <!-- Umbraco 19 is only out as a release candidate, so the net11.0 range starts at one, which NuGet
+         warns about for a stable package. Remove this with the move to 19.0.0. -->
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
     <UmbracoVersion Condition="'$(UmbracoVersion)' == ''">[17.1.0,19.0.0)</UmbracoVersion>
   </PropertyGroup>
   
@@ -12,8 +17,11 @@
     <PackageVersion Include="Umbraco.Cms.Api.Management" Version="$(UmbracoVersion)" />
     <PackageVersion Include="Umbraco.Cms.Web.Common" Version="$(UmbracoVersion)" />
     <PackageVersion Include="Umbraco.Cms.Web.Website" Version="$(UmbracoVersion)" />
-    <PackageVersion Include="Blurhash.ImageSharp" Version="4.0.1" />
-    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.12" />
+    <!-- Match the ImageSharp major each Umbraco line ships: 3.x up to Umbraco 18, 4.x from Umbraco 19. -->
+    <PackageVersion Include="Blurhash.ImageSharp" Version="4.0.1" Condition="'$(TargetFramework)' != 'net11.0'" />
+    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.12" Condition="'$(TargetFramework)' != 'net11.0'" />
+    <PackageVersion Include="Blurhash.ImageSharp" Version="4.1.1" Condition="'$(TargetFramework)' == 'net11.0'" />
+    <PackageVersion Include="SixLabors.ImageSharp" Version="4.1.3" Condition="'$(TargetFramework)' == 'net11.0'" />
     <!-- Security floors for dependencies inherited from the supported Umbraco range. -->
     <PackageVersion Include="MailKit" Version="4.18.1" />
     <PackageVersion Include="MessagePack" Version="3.1.12" />

@@ -9,7 +9,7 @@ This is the complete first-time setup path. Stay on this page from installation 
 
 ## 1. Check the prerequisites
 
-Blur Placeholder supports Umbraco CMS 17.1 through 18.x on .NET 10. Nothing else is required: the package generates placeholders from the media already in your library and needs no external service.
+Blur Placeholder supports Umbraco CMS 17.1 through 19.x: Umbraco 17 and 18 on .NET 10, Umbraco 19 on .NET 11. Nothing else is required: the package generates placeholders from the media already in your library and needs no external service.
 
 ## 2. Install the package
 

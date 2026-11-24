@@ -12,7 +12,7 @@ Blur Placeholder generates a compact loading placeholder whenever an Image chang
 
 ## Install
 
-Blur Placeholder supports Umbraco CMS 17.1 through 18.x. Add it to the Umbraco web project:
+Blur Placeholder supports Umbraco CMS 17.1 through 19.x. Add it to the Umbraco web project:
 
 ```sh
 dotnet add package TheBuilder.BlurPlaceholder

@@ -37,7 +37,7 @@ Native values carry a `blurhash:` or `thumbhash:` prefix, so a consumer never ha
 
 ## Install
 
-Blur Placeholder supports Umbraco CMS 17.1 through 18.x on .NET 10. Add it to the Umbraco web project:
+Blur Placeholder supports Umbraco CMS 17.1 through 19.x: Umbraco 17 and 18 on .NET 10, Umbraco 19 on .NET 11. Add it to the Umbraco web project:
 
 ```sh
 dotnet add package TheBuilder.BlurPlaceholder
