@@ -43,4 +43,4 @@ Strip `blurhash:` before passing the text to a BlurHash decoder. For `thumbhash:
 
 ### Package restore fails
 
-The package targets `net10.0` and declares an Umbraco dependency range of `[17.1.0,19.0.0)`. Use a compatible .NET SDK and make sure the configured NuGet source can reach `api.nuget.org`.
+The package targets `net10.0` with an Umbraco dependency range of `[17.1.0,19.0.0)`, and `net11.0` with `[19.0.0,20.0.0)` for Umbraco 19. NuGet picks the build that matches your site's target framework. Use a compatible .NET SDK and make sure the configured NuGet source can reach `api.nuget.org`.
